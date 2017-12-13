@@ -6,10 +6,13 @@ import * as RxDB from 'rxdb';
 import {QueryChangeDetector} from 'rxdb';
 import { schema } from './schema';
 
+import * as roots from './pokorny-roots';
+
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.min.js';
 
 import * as moment from 'moment';
+
 
 QueryChangeDetector.enable();
 QueryChangeDetector.enableDebugging();
@@ -20,23 +23,74 @@ RxDB.plugin(require('pouchdb-adapter-http'));
 const syncURL = 'http://localhost:5984/';
 const dbName = 'pokornyx17121101';
 
+// const indogermDbName = 'pokorny17112501';
+// piememoroots17102401 piekeys17102401
+class Words extends Component {
+    render() {
+	const onClickWord = this.props.onClickWord;
+	const onClick = this.onClickWord;
+	return this.props.words.map(
+	    ({id, ieLang, ieWords}) => {
+		return (<Word key={id} id={id}
+			ieLang={ieLang} ieWords={ieWords}
+			onClickWord={onClickWord} />)
+	    });
+    }
+}
+
+class Word extends Component {
+    render() {
+		const date = moment(this.props.id, 'x').fromNow();
+		return (
+			<div key={this.props.id}>
+			<p>
+			({this.props.ieLang})&nbsp;
+			<span>{this.props.ieWords} ... {date}</span>
+			<a href='' onClick={this.props.onClickWord}>&gt;&gt;</a>
+			</p>
+			</div>
+		);	    
+    }
+
+    
+}
+
 class App extends Component {
 
     constructor(props) {
 	super(props);
+	// db, indogermDb
 	this.state = {
-	    newWord: '', words: []
+	    newWord: '',
+	    words: [],
+	    ieLinks: new Map()
 	};
 	this.subs = [];
 	this.addWord = this.addWord.bind(this);
 	this.handleChangeLang = this.handleChangeLang.bind(this);
 	this.handleChangeWords = this.handleChangeWords.bind(this);
+	this.handleWordProcessor = this.handleWordProcessor.bind(this);
     }
 
+    async indogermDatabase() {
+	/*
+	const db = await RxDB.create(
+	    {name: indogermDbName,
+	     adapter: 'idb'
+	    }
+	);
+	console.dir(db);
+//	const 
+	return db;
+	*/
+    }
+    
     async createDatabase() {
 	// password must have at least 8 characters
 	const db = await RxDB.create(
-	    {name: dbName, adapter: 'idb', password: '12345678'}
+	    {name: dbName,
+	     adapter: 'idb',
+	     password: '12345678'}
 	);
 	console.dir(db);
 	// show who's the leader in page's title
@@ -95,6 +149,8 @@ class App extends Component {
 		this.setState({words: words});
 	    });
 	this.subs.push(sub);
+	// iew
+	// this.indogermDb = await this.indogermDatabase();
     }
 
     componentWillUnmount() {
@@ -103,12 +159,14 @@ class App extends Component {
     }
 
     render() {
-	const wordsContent = this.renderWords();
+	const linksContent = this.renderAndBuildLinks();	
 	const newLang = this.state.newLang;
 	const newWords = this.state.newWords;
 	const onChangeLang = this.handleChangeLang;
 	const onChangeWords = this.handleChangeWords;
 	const onClick = this.addWord;
+	const wordsContent = this.state.words;
+	const onClickWord = this.handleWordProcessor;
 	return (
 		<div className="App">
 		<ToastContainer autoClose={3000} />
@@ -117,7 +175,8 @@ class App extends Component {
 		<h2>JPokornyX</h2>
 		</div>
 
-		<div>{wordsContent}</div>
+		<Words words={wordsContent} onClickWord={onClickWord} />
+	    
 		<hr/>
 		
 		<div id="add-word-div">
@@ -126,22 +185,29 @@ class App extends Component {
 		<input type="text" value={newWords} onChange={onChangeWords} placeholder="words" />
 		<button onClick={onClick}>Add word</button>
 		</div>
+
+		<div>{linksContent}</div>
+		
 		</div>
 	);
     }
 
-    renderWords() {
-	return this.state.words.map(
-	    ({id, ieLang, ieWords}) => {
-		const date = moment(id, 'x').fromNow();
+    renderAndBuildLinks() {
+	const links = this.state.ieLinks.get(this.newWords);
+	return links==null ? (<div>...</div>) : links.map(
+	    ({id, engl, germ, content, word, line}) => {
 		return (
-			<div key={id}>
-			<p>({ieLang}) <span>{ieWords} ... {date}</span></p>
-			</div>
+			<div key={id}>({id}) {engl} ... {line}</div>
 		);
-	    });
+	    }
+	);
     }
 
+    handleWordProcessor(event) {
+	event.preventDefault();
+	this.setState({ieLinks: new Map()});
+    }
+    
     handleChangeWords(event) {
 	this.setState({newWords: event.target.value});
     }
