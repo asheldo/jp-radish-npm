@@ -1,15 +1,35 @@
 // pokorny-roots
-var PouchDB = require('pouchdb-core');
+var PouchDB = require('pouchdb-browser');
 // PouchDB.plugin(require('pouchdb-adapter-idb'));
 
 const nameDatabase = 'pokorny17112501',
       nameKeywordsDb = 'piekeys17102401',
       nameMemoRootsDb = 'piememoroots17102401';
-const uriDatabases = (host) =>  `http://${host}:5984/`;
+
+const syncURL = 'localhost';
+
+const host = "192.168.0.6";
+const uriDatabases = // (host) =>
+      `http://${host}:5984/`;
 // 
 var remoteDatabase, remoteKeywordsDb, remoteMemoRootsDb;
 
+
+export function database() {
+    return remoteDatabase;
+}
+
+/**
+ * messes with emacs tabs, so at end of file
+ */
+function initData() {
+    remoteDatabase = new PouchDB(`${nameDatabase}`);
+    remoteKeywordsDb = new PouchDB(`${nameKeywordsDb}`);
+    remoteMemoRootsDb = new PouchDB(`${nameMemoRootsDb}`);    
+}
+
 export function syncAndConnect() {
+    initData();
     syncDomAttribute('data-sync-state', 'syncing-data');
     return to(remoteKeywordsDb,   nameKeywordsDb)
 	.then(sync2)
@@ -17,6 +37,7 @@ export function syncAndConnect() {
 }
 
 function langs() {
+    console.log("langs?");
 }
 
 function handleRows(results) {

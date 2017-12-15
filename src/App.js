@@ -1,18 +1,17 @@
 import React, { Component } from 'react';
 import logo from './logo.svg';
 import './App.css';
+// for pokorny roots db
+import * as roots from './pokorny-roots';
+import * as rootParser from './pokorny-root-parser';
 
 import * as RxDB from 'rxdb';
 import {QueryChangeDetector} from 'rxdb';
 import { schema } from './schema';
 
-import * as roots from './pokorny-roots';
-
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.min.js';
-
 import * as moment from 'moment';
-
 
 QueryChangeDetector.enable();
 QueryChangeDetector.enableDebugging();
@@ -21,38 +20,39 @@ RxDB.plugin(require('pouchdb-adapter-idb'));
 RxDB.plugin(require('pouchdb-adapter-http'));
 
 const syncURL = 'http://localhost:5984/';
+// vs. the indogermanishes etymologisches worterbuch = pokorny17112501
 const dbName = 'pokornyx17121101';
-
 // const indogermDbName = 'pokorny17112501';
 // piememoroots17102401 piekeys17102401
+
 class Words extends Component {
     render() {
-	const onClickWord = this.props.onClickWord;
-	const onClick = this.onClickWord;
-	return this.props.words.map(
+	const wordProcess = this.props.onClickWord;
+	const words = this.props.words;
+	return words.map(
 	    ({id, ieLang, ieWords}) => {
+		console.log("34: " + ieWords);
+		const wordProcessOne = wordProcess(ieWords);
 		return (<Word key={id} id={id}
 			ieLang={ieLang} ieWords={ieWords}
-			onClickWord={onClickWord} />)
+			onClickWord={wordProcessOne} />)
 	    });
     }
 }
 
 class Word extends Component {
     render() {
-		const date = moment(this.props.id, 'x').fromNow();
-		return (
-			<div key={this.props.id}>
-			<p>
-			({this.props.ieLang})&nbsp;
-			<span>{this.props.ieWords} ... {date}</span>
-			<a href='' onClick={this.props.onClickWord}>&gt;&gt;</a>
-			</p>
-			</div>
-		);	    
+	const date = moment(this.props.id, 'x').fromNow();
+	return (
+		<div key={this.props.id}>
+		<p>
+		({this.props.ieLang})&nbsp;
+		<span>{this.props.ieWords} ... {date}</span>
+		<a href='' onClick={this.props.onClickWord}>&gt;&gt;</a>
+		</p>
+		</div>
+	);	    
     }
-
-    
 }
 
 class App extends Component {
@@ -70,19 +70,22 @@ class App extends Component {
 	this.handleChangeLang = this.handleChangeLang.bind(this);
 	this.handleChangeWords = this.handleChangeWords.bind(this);
 	this.handleWordProcessor = this.handleWordProcessor.bind(this);
+
     }
 
     async indogermDatabase() {
-	/*
-	const db = await RxDB.create(
-	    {name: indogermDbName,
-	     adapter: 'idb'
-	    }
-	);
-	console.dir(db);
-//	const 
-	return db;
-	*/
+	const db = null;
+	roots.syncAndConnect()
+	    .then((info) => {
+		// this.indogermDb = roots.database();
+		this.rootDatabaseConnected = 1;
+	    })
+	    .catch((err) => {
+		console.log(err);
+	    });
+	// await RxDB.create({name: indogermDbName, adapter: 'idb'});
+	console.dir("indogerm");
+	// return db;	
     }
     
     async createDatabase() {
@@ -150,7 +153,8 @@ class App extends Component {
 	    });
 	this.subs.push(sub);
 	// iew
-	// this.indogermDb = await this.indogermDatabase();
+	// this.indogermDb = await
+	this.indogermDatabase();
     }
 
     componentWillUnmount() {
@@ -175,8 +179,12 @@ class App extends Component {
 		<h2>JPokornyX</h2>
 		</div>
 
+	        <table width="100%"><tbody><tr><td>{linksContent}</td>
+		<td> </td>
+		<td>
 		<Words words={wordsContent} onClickWord={onClickWord} />
-	    
+		</td></tr></tbody></table>
+		
 		<hr/>
 		
 		<div id="add-word-div">
@@ -186,28 +194,49 @@ class App extends Component {
 		<button onClick={onClick}>Add word</button>
 		</div>
 
-		<div>{linksContent}</div>
-		
 		</div>
 	);
     }
 
     renderAndBuildLinks() {
-	const links = this.state.ieLinks.get(this.newWords);
-	return links==null ? (<div>...</div>) : links.map(
-	    ({id, engl, germ, content, word, line}) => {
+	const links = this.state.ieLinks; // .get(this.newWords);
+	console.log("201: " + links.size);
+	if (links == null) {
+	    return (<div>...</div>);
+	} else {
+	    const contents = [];
+	    links.forEach((content, ieWords, map) => {
+		const id = ieWords;
+		const parts = content.split(":");
+		const engl = parts[2];
+		const line = parts[parts.length-1];		
+		contents[contents.length] = (
+		    <div key={id}>({id}) {engl} ... {line}</div>
+		);
+		// (<div dangerouslySetInnerHTML={{__html: data}} />);
+	    });
+	    return contents;
+	}
+    }
+/*	
+	      : links.forEach((ieWords, content, map) => {
+		  return ieWords;
+	      });
+*/
+	      // : (<div>{links}</div>);
+	  /*  : links.forEach((ieWords, content, map) => {
+		const id = ieWords;
+		const parts = content.split(":");
+		const engl = parts[2];
+		const line = parts[parts.length-1];		
 		return (
 			<div key={id}>({id}) {engl} ... {line}</div>
 		);
-	    }
-	);
-    }
+	    });
+	  */
+//	return (<div>Links<br/> {contents}</div>)
 
-    handleWordProcessor(event) {
-	event.preventDefault();
-	this.setState({ieLinks: new Map()});
-    }
-    
+
     handleChangeWords(event) {
 	this.setState({newWords: event.target.value});
     }
@@ -227,6 +256,73 @@ class App extends Component {
 	this.setState({newLang: '', newWords: ''});
     }
 
+    handleWordProcessor(ieWords) {
+	return (event) => {
+	    event.preventDefault();
+	    this.fetchPokornyRoots(ieWords);
+	}
+    }
+
+    fetchPokornyRoots(ieWords) {
+	const re = ";";
+	const words = ieWords.split(re);
+	console.log("240: " + words);
+	words.forEach((word) => {
+	    if (this.rootsDatabaseConnected)
+		console.log("rootsDatabaseConnected");
+	    const tokens = word.split("=");
+	    tokens.forEach((token) => {
+		const results = [];
+		this.fetchRoot(token, results)
+		    .then((info) => {
+			console.log("255: " + results.length);
+			this.setRootContent(ieWords, results);
+		    });
+	    });
+	});
+    }
+
+    setRootContent(ieWords, results) {
+	results.forEach((result) => {
+	    // map = ieLinks ?
+	    const rootId = result[0];
+	    const content = result[1];
+	    const map = new Map();
+	    map.set(ieWords, content);
+	    console.log("257: " + content.substring(0, 50));
+	    // if (ieLinks.size > 0) {
+	    this.setState({ieLinks: map});
+	    return;
+	});
+    }
+    
+    fetchRoot(proposed, results) {
+	let rootId = proposed;
+	const remoteDatabase = roots.database();
+	return remoteDatabase.get(rootId)
+	    .then( (result) => {
+		const content = rootParser.parseContent(result.content);
+		results[results.length] = [rootId, content];
+		// return content;
+		// outParsed.innerHTML = content;
+	    }).catch((err) => {
+		console.log(err);
+		rootId = rootId + "*";
+		return remoteDatabase.get(rootId).then( function(result) {
+		    const content = rootParser.parseContent(result.content);
+		    results[results.length] = [rootId, content];
+		    console.log("289");
+		    console.log(results);
+		    // return content;
+		    // outParsed.innerHTML = content;
+		}).catch(function(err) {		    
+		    console.log("Get failed");
+		});
+		// return "";
+	    });
+    }
+
+    
 }
 
 export default App;
