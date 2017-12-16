@@ -25,6 +25,35 @@ const dbName = 'pokornyx17121101';
 // const indogermDbName = 'pokorny17112501';
 // piememoroots17102401 piekeys17102401
 
+class Links extends Component {
+    render() {
+	const map = this.props.wordsAndLinks;
+	if (map == null) {
+	    return (<div
+		    className="App-root-table-scroll"
+		    dangerouslySetInnerHTML={{__html: '<pre>...</pre>'}} />);
+
+	} else {
+	    console.log("31: " + map.size);
+	    var contents = (<div>...</div>);
+	    map.forEach((contentVal, ieWordsKey, map) => {
+		// console.log("37: " + contentVal);
+		console.log(contentVal);
+		// console.log(map);
+		const id = ieWordsKey;
+		const parts = contentVal.split(":");
+		const engl = parts[2];
+		const last = parts[parts.length-1];		
+		contents = (
+			<div key={id}
+		    className="App-root-table-scroll"
+		    dangerouslySetInnerHTML={{__html: contentVal}} />);
+   	    });			
+	    return contents; // (<div>{areas}</div>);
+	}
+    }
+}
+
 class Words extends Component {
     render() {
 	const wordProcess = this.props.onClickWord;
@@ -163,7 +192,8 @@ class App extends Component {
     }
 
     render() {
-	const linksContent = this.renderAndBuildLinks();	
+	// const linksContent = this.renderAndBuildLinks();
+	const ieLinks = this.state.ieLinks;
 	const newLang = this.state.newLang;
 	const newWords = this.state.newWords;
 	const onChangeLang = this.handleChangeLang;
@@ -179,8 +209,9 @@ class App extends Component {
 		<h2>JPokornyX</h2>
 		</div>
 
-	        <table width="100%"><tbody><tr><td>{linksContent}</td>
-		<td> </td>
+	        <table width="100%"><tbody><tr><td>
+		<Links wordsAndLinks={ieLinks} /></td>
+
 		<td>
 		<Words words={wordsContent} onClickWord={onClickWord} />
 		</td></tr></tbody></table>
@@ -210,9 +241,8 @@ class App extends Component {
 		const parts = content.split(":");
 		const engl = parts[2];
 		const line = parts[parts.length-1];		
-		contents[contents.length] = (
-		    <div key={id}>({id}) {engl} ... {line}</div>
-		);
+		contents[contents.length] 
+		    = (<div key={id}>({id}) {engl} ... {line}</div>);
 		// (<div dangerouslySetInnerHTML={{__html: data}} />);
 	    });
 	    return contents;
