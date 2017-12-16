@@ -1,3 +1,6 @@
+import * as language from './pokorny-language';
+
+const langsMap = language.langsMap;
 
 const maxWords = 128, maxLemmas = 8, maxDefinitions = 128;
 
@@ -16,66 +19,15 @@ const greekRegExCount = greekRegEx.source.split("|").length;
 const langRegEx = /((\b[Hh]itt\.)|(\b[Ll]it\.)|(\b[Aa]lb\.)|(\b[Rr]um\.)|([Ll]ett\.)|([Rr]uss\.)|([Ss]lav\.)|(čech\.)|([Ss]lov\.)|(\b[Hh]es\.)|(Old Church Slavic)|(Old Indian)|(\baisl\.)|(schwed\.)|(nhd\.)|(mhd\.)|(ahd\.)|([Gg]ot\.)|(\bas\.)|(\b[Ee]ngl\.)|(mengl\.)|(\bags\.)|([Gg]erm\.)|(air\.)|(mir\.)|(\b[Aa]rm\.)|([Ii]llyr\.)|([Cc]ymr\.)|([Mm]cymr\.)|(\bav\.)|([Aa]vest\.)|(ven\.-ill\.)|(\b[Ll]at\.)|(\b[Tt]och\. B)|(\b[Tt]och\. A))\s(\/[^\/]*\/)([,\s]*)/;
 const langRegExCount = langRegEx.source.split("|").length;
 
-const languages = [["hitt","hitt"],
-		   ["old indian","old indian"],
-		   ["gr","gr"],["maked","maked"],["phryg","phryg"],
-		   ["av","av"],["av","avest"],
-		   ["lat","lat"],
-		   ["russ","russ"],["old church slavic","old church slavic"],["slav","slav"],["čech","čech"],["slov","slov"],
-		   ["lit","lit"],
-		   ["alb","alb"],
-		   ["got","got"],["germ","germ"],["as","as"],["ags","ags"],["aisl","aisl"],
-		   ["schwed","schwed"],
-		   ["ahd","ahd"],["nhd","nhd"],
-		   ["mengl","mengl"],["engl","engl"],
-		   ["cymr","cymr"],["air","air"],["mir","mir"],
-		   ["illyr","illyr"],["ven.-ill","ven.-ill"],
-		   ["arm","arm"],
-		   ["hes","hes"],
-		   ["toch","toch"]];
-const langsMap = {};    
-				   // console.log(langsMa
+
+// TODO
 const keyClick = "onclick='linkKeywordLanguage(this)' href='javascript:void(0)' ";
 const rootClick = "onclick='showUpdate(this.innerHTML, pieroot, roothistory)' href='javascript:void(0)'"; 				       
 const definitionClick = "onclick='linkKeywordDefinition(this)' href='javascript:void(0)' ";
-// TODO
+
 const externalLinks = [["Abkurzungsverzeichnis", "http://wwwg.uni-klu.ac.at/eeo/AbkuerzungsverzeichnisSprachen.pdf"]];
 
-/**
- * basic forms stuff
- */
-export function langs() {
-    const langKey = document.getElementById('ielanguageKeyword');
-    langKey.enabled = true; // setAttribute('enabled', 'true');
-    const sel = document.getElementById("ielanguage");
-    const selKeys = document.getElementById("ielanguageKeyword");
-    sel.options.length = selKeys.options.length = 0;
-    selKeys.options[0] = new Option("","");
-    languages.sort().forEach(function(lang) {
-        sel.options[sel.options.length]
-	    = new Option(lang[1], lang[0]);
-        selKeys.options[sel.options.length]
-	    = new Option(lang[1], lang[0]);
-    });
-    languages.forEach(function(lang) {
-	langsMap[lang[1]] = lang[0];
-    });
-}
-
-/*
-    function connect() {
-	remoteDatabase.info()
-	    .then(function (info) {
-		console.log(info);
-	    });
-	remoteDatabase.allDocs({
-	    include_docs: true,
-	    attachments: true
-	})
-	    .then(handleRows)
-	    .catch(err => console.log(err));
-    }
-				   
+/*				   
     function handleRows(results) {
 	var syncDom = document.getElementById('sync-wrapper');
 	const mapAsc = mapRoots(results.rows);

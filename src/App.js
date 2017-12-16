@@ -4,6 +4,7 @@ import './App.css';
 // for pokorny roots db
 import * as roots from './pokorny-roots';
 import * as rootParser from './pokorny-root-parser';
+import * as language from './pokorny-language';
 
 import * as RxDB from 'rxdb';
 import {QueryChangeDetector} from 'rxdb';
@@ -12,6 +13,7 @@ import { schema } from './schema';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.min.js';
 import * as moment from 'moment';
+import Autosuggest from 'react-autosuggest';
 
 QueryChangeDetector.enable();
 QueryChangeDetector.enableDebugging();
@@ -24,6 +26,8 @@ const syncURL = 'http://localhost:5984/';
 const dbName = 'pokornyx17121101';
 // const indogermDbName = 'pokorny17112501';
 // piememoroots17102401 piekeys17102401
+
+const languages = language.languagesValAndName();
 
 class Links extends Component {
     render() {
@@ -83,6 +87,74 @@ class Word extends Component {
 	);	    
     }
 }
+    
+// Auto-suggest
+class Language extends Component {
+    constructor(props) {
+	super(props);
+	// Autosuggest is a controlled component.
+	// This means that you need to provide an input value
+	// and an onChange handler that updates this value (see below).
+	// Suggestions also need to be provided to the Autosuggest,
+	// and they are initially empty because the Autosuggest is closed.
+	this.state = {
+	    value: '',
+	    suggestions: []
+	};
+    }
+    onChange = (event, { newValue }) => {
+	this.setState({ value: newValue });
+	this.props.onChangeLanguage(event);
+    };
+    // Teach Autosuggest how to calculate suggestions for any given input value.
+    getSuggestions(value) {
+	const inputValue = value == null ? "" : value.trim().toLowerCase();
+	const inputLength = inputValue.length;	
+	return inputLength === 0 ? []
+	    : languages.filter(
+		lang =>
+		    lang.name.toLowerCase().slice(0, inputLength)
+		    === inputValue
+		    || lang.val.toLowerCase().slice(0, inputLength)
+		    === inputValue);
+    }
+    // When suggestion is clicked, Autosuggest needs to populate the input
+    // based on the clicked suggestion. Teach Autosuggest how to calculate the
+    // input value for every given suggestion.
+
+    // Autosuggest will call this every time you need to update suggestions.
+    // You already implemented this logic above, so just use it.
+    onSuggestionsFetchRequested = ({ value }) => {
+	this.setState({ suggestions: this.getSuggestions(value) });
+    };
+    // Autosuggest will call this every time you need to clear suggestions.
+    onSuggestionsClearRequested = () => {
+	this.setState({ suggestions: [] });
+    };
+    // Use your imagination to render suggestions.
+    renderSuggestion(suggestion) {
+	return (<div>{suggestion.val} ({suggestion.name})</div>);
+    }
+    getSuggestionValue(suggestion) { return suggestion.val; }
+    //
+    render() {
+	const { value, suggestions } = this.state;
+	// Autosuggest will pass through all these props to the input.
+	const inputProps = { placeholder: 'Type a language',
+			     value, onChange: this.onChange };
+	// Finally, render it!
+	return (
+		<Autosuggest
+            suggestions={suggestions}
+            onSuggestionsFetchRequested={this.onSuggestionsFetchRequested}
+            onSuggestionsClearRequested={this.onSuggestionsClearRequested}
+            getSuggestionValue={this.getSuggestionValue}
+            renderSuggestion={this.renderSuggestion}
+            inputProps={inputProps}
+		/>
+	);
+    }
+}
 
 class App extends Component {
 
@@ -105,16 +177,9 @@ class App extends Component {
     async indogermDatabase() {
 	const db = null;
 	roots.syncAndConnect()
-	    .then((info) => {
-		// this.indogermDb = roots.database();
-		this.rootDatabaseConnected = 1;
-	    })
-	    .catch((err) => {
-		console.log(err);
-	    });
+	    .then((info) => this.rootDatabaseConnected = 1)
+	    .catch((err) => console.log(err));
 	// await RxDB.create({name: indogermDbName, adapter: 'idb'});
-	console.dir("indogerm");
-	// return db;	
     }
     
     async createDatabase() {
@@ -173,16 +238,15 @@ class App extends Component {
     async componentDidMount() {
 	this.db = await this.createDatabase();
 	// Subscribe to query to get all documents
-	const sub = this.db.words.find().sort({id: 1}).$.subscribe(
-	    words => {
-		if (!words)
-		    return;
-		toast('Reloading words');
-		this.setState({words: words});
-	    });
+	const sub = this.db.words.find().sort({id: 1})
+	      .$.subscribe(
+		  words => {
+		      if (!words)
+			  return;
+		      toast('Reloading words');
+		      this.setState({words: words});
+		  });
 	this.subs.push(sub);
-	// iew
-	// this.indogermDb = await
 	this.indogermDatabase();
     }
 
@@ -192,7 +256,6 @@ class App extends Component {
     }
 
     render() {
-	// const linksContent = this.renderAndBuildLinks();
 	const ieLinks = this.state.ieLinks;
 	const newLang = this.state.newLang;
 	const newWords = this.state.newWords;
@@ -220,52 +283,17 @@ class App extends Component {
 		
 		<div id="add-word-div">
 		<h3>Add Word</h3>
-		<input type="text" value={newLang} onChange={onChangeLang} placeholder="language" />
-		<input type="text" value={newWords} onChange={onChangeWords} placeholder="words" />
+		<div style={{whiteSpace:'nowrap',overflow:'hidden'}}>
+		<Language onChangeLanguage={onChangeLang} />
+		<input type="text" value={newWords}
+	            onChange={onChangeWords} placeholder="words" />
 		<button onClick={onClick}>Add word</button>
+		</div>
 		</div>
 
 		</div>
 	);
     }
-
-    renderAndBuildLinks() {
-	const links = this.state.ieLinks; // .get(this.newWords);
-	console.log("201: " + links.size);
-	if (links == null) {
-	    return (<div>...</div>);
-	} else {
-	    const contents = [];
-	    links.forEach((content, ieWords, map) => {
-		const id = ieWords;
-		const parts = content.split(":");
-		const engl = parts[2];
-		const line = parts[parts.length-1];		
-		contents[contents.length] 
-		    = (<div key={id}>({id}) {engl} ... {line}</div>);
-		// (<div dangerouslySetInnerHTML={{__html: data}} />);
-	    });
-	    return contents;
-	}
-    }
-/*	
-	      : links.forEach((ieWords, content, map) => {
-		  return ieWords;
-	      });
-*/
-	      // : (<div>{links}</div>);
-	  /*  : links.forEach((ieWords, content, map) => {
-		const id = ieWords;
-		const parts = content.split(":");
-		const engl = parts[2];
-		const line = parts[parts.length-1];		
-		return (
-			<div key={id}>({id}) {engl} ... {line}</div>
-		);
-	    });
-	  */
-//	return (<div>Links<br/> {contents}</div>)
-
 
     handleChangeWords(event) {
 	this.setState({newWords: event.target.value});
@@ -305,7 +333,6 @@ class App extends Component {
 		const results = [];
 		this.fetchRoot(token, results)
 		    .then((info) => {
-			console.log("255: " + results.length);
 			this.setRootContent(ieWords, results);
 		    });
 	    });
@@ -319,7 +346,6 @@ class App extends Component {
 	    const content = result[1];
 	    const map = new Map();
 	    map.set(ieWords, content);
-	    console.log("257: " + content.substring(0, 50));
 	    // if (ieLinks.size > 0) {
 	    this.setState({ieLinks: map});
 	    return;
