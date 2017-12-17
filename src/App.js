@@ -171,7 +171,7 @@ class App extends Component {
 	this.handleChangeLang = this.handleChangeLang.bind(this);
 	this.handleChangeWords = this.handleChangeWords.bind(this);
 	this.handleWordProcessor = this.handleWordProcessor.bind(this);
-
+	this.handleWordLink = this.handleWordLink.bind(this);
     }
 
     async indogermDatabase() {
@@ -261,35 +261,46 @@ class App extends Component {
 	const newWords = this.state.newWords;
 	const onChangeLang = this.handleChangeLang;
 	const onChangeWords = this.handleChangeWords;
-	const onClick = this.addWord;
 	const wordsContent = this.state.words;
 	const onClickWord = this.handleWordProcessor;
+	const onClickAdd = this.addWord;
+	const onClickTest = this.handleWordLink;
 	return (
 		<div className="App">
+		
 		<ToastContainer autoClose={3000} />
 		<div className="App-header">
 		<img src={logo} className="App-logo" alt="logo" />
 		<h2>JPokornyX</h2>
 		</div>
 
-	        <table width="100%"><tbody><tr><td>
-		<Links wordsAndLinks={ieLinks} /></td>
+	        <table width="100%"><tbody><tr>
+		<td width="50%">
+		<Links wordsAndLinks={ieLinks} />
+		</td>
 
-		<td>
-		<Words words={wordsContent} onClickWord={onClickWord} />
-		</td></tr></tbody></table>
+		<td width="50%" style={{verticalAlign:'top'}}>
+		<div className="add-word-div">
+		<h3>Add Word</h3>		
+		<table width="100%"><tbody><tr>
+		<td style={{verticalAlign:"top", textAlign:"right"}}>
+		<Language onChangeLanguage={onChangeLang} /></td>
+		<td style={{verticalAlign:"top", textAlign:"left"}}>
+		<input type="text" value={newWords} style={{width:'30em'}}
+	    onChange={onChangeWords} placeholder="words" />
+		<br/>
+		<button onClick={onClickAdd}>Add word</button>
+		<button onClick={onClickTest}>&gt;&gt; Test</button></td>
+		</tr></tbody></table>
 		
+		</div>		
 		<hr/>
 		
-		<div id="add-word-div">
-		<h3>Add Word</h3>
-		<div style={{whiteSpace:'nowrap',overflow:'hidden'}}>
-		<Language onChangeLanguage={onChangeLang} />
-		<input type="text" value={newWords}
-	            onChange={onChangeWords} placeholder="words" />
-		<button onClick={onClick}>Add word</button>
-		</div>
-		</div>
+		<Words words={wordsContent} onClickWord={onClickWord} />
+		</td>
+		</tr></tbody></table>
+		
+		<hr/>
 
 		</div>
 	);
@@ -313,6 +324,14 @@ class App extends Component {
 	await this.db.words.insert(newWord);	
 	this.setState({newLang: '', newWords: ''});
     }
+
+    // like handleWordProcessor(ieWords);
+    handleWordLink(event) {
+	event.preventDefault();
+	const ieWords = this.state.newWords; // words;
+	// console.log("310: " + ieWords);
+	this.fetchPokornyRoots(ieWords);	
+    }    
 
     handleWordProcessor(ieWords) {
 	return (event) => {
