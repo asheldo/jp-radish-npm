@@ -4,6 +4,7 @@ import './App.css';
 // for pokorny roots db
 import * as roots from './pokorny-roots';
 import * as rootParser from './pokorny-root-parser';
+import * as rootSearch from './pokorny-root-search';
 import * as language from './pokorny-language';
 
 import * as RxDB from 'rxdb';
@@ -348,12 +349,37 @@ class App extends Component {
 	    if (this.rootsDatabaseConnected)
 		console.log("rootsDatabaseConnected");
 	    const tokens = word.split("=");
-	    tokens.forEach((token) => {
-		const results = [];
-		this.fetchRoot(token, results)
-		    .then((info) => {
+	    tokens.forEach(async (token) => {
+		// .then((info) => {
+		try {
+		    let results = await this.fetchRoot(token);
+		    this.setRootContent(ieWords, results);
+		} catch (err) {
+		    try {
+			let results = await this.fetchRoot(token + "*");
 			this.setRootContent(ieWords, results);
-		    });
+		    } catch (err) {
+			let results = await this.searchRoots(word);
+			if (results) 
+			    this.setRootContent(ieWords, results);
+		    }
+		}
+/*
+	    }).catch((err) => {
+		console.log(err);
+		rootId = rootId + "*";
+		return remoteDatabase.get(rootId).then( function(result) {
+		    const content = rootParser.parseContent(result.content);
+		    results[results.length] = [rootId, content];
+		    console.log("289");
+		    console.log(results);
+		    // return content;
+		    // outParsed.innerHTML = content;
+		}).catch(function(err) {		    
+		    console.log("Get failed");
+		});
+		// return "";
+*/		
 	    });
 	});
     }
@@ -371,32 +397,35 @@ class App extends Component {
 	});
     }
     
-    fetchRoot(proposed, results) {
+    async fetchRoot(proposed) {
 	let rootId = proposed;
 	const remoteDatabase = roots.database();
-	return remoteDatabase.get(rootId)
-	    .then( (result) => {
-		const content = rootParser.parseContent(result.content);
-		results[results.length] = [rootId, content];
-		// return content;
-		// outParsed.innerHTML = content;
-	    }).catch((err) => {
-		console.log(err);
-		rootId = rootId + "*";
-		return remoteDatabase.get(rootId).then( function(result) {
-		    const content = rootParser.parseContent(result.content);
-		    results[results.length] = [rootId, content];
-		    console.log("289");
-		    console.log(results);
-		    // return content;
-		    // outParsed.innerHTML = content;
-		}).catch(function(err) {		    
-		    console.log("Get failed");
-		});
-		// return "";
-	    });
+	const result = await remoteDatabase.get(rootId);
+	// .then( (result) => {
+	const content = rootParser.parseContent(result.content);
+	const results = [[rootId, content]];
+	return results;
+	// return content;
+	// outParsed.innerHTML = content;	
     }
 
+    // 
+    async searchRoots(words) {
+	const db = roots.database();
+	// words.forEach(async (word) => {
+	const result = await rootSearch.search(db, words);
+	// .then( (result) => {
+	if (result) {
+	    const content = rootParser.parseContent(result.content);
+	    const rootId = result.id;
+	    const results = [[rootId, content]];
+	    return results;
+	}
+	// });
+	// return content;
+	// outParsed.innerHTML = content;	
+    }
+    
     
 }
 
