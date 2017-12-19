@@ -53,6 +53,7 @@ class Links extends Component {
 			<div key={id}
 		    className="App-root-table-scroll"
 		    dangerouslySetInnerHTML={{__html: contentVal}} />);
+		return;
    	    });			
 	    return contents; // (<div>{areas}</div>);
 	}
@@ -245,7 +246,7 @@ class App extends Component {
 		      if (!words)
 			  return;
 		      toast('Reloading words');
-		      this.setState({words: words});
+		      this.setState({words: words.reverse()});
 		  });
 	this.subs.push(sub);
 	this.indogermDatabase();
@@ -331,7 +332,7 @@ class App extends Component {
 	event.preventDefault();
 	const ieWords = this.state.newWords; // words;
 	// console.log("310: " + ieWords);
-	this.fetchPokornyRoots(ieWords);	
+	this.fetchPokornyRoots(ieWords);
     }    
 
     handleWordProcessor(ieWords) {
@@ -342,58 +343,51 @@ class App extends Component {
     }
 
     fetchPokornyRoots(ieWords) {
-	const re = ";";
-	const words = ieWords.split(re);
-	console.log("240: " + words);
+	const words = ieWords.split(";");
+	var allwords = [];
 	words.forEach((word) => {
-	    if (this.rootsDatabaseConnected)
-		console.log("rootsDatabaseConnected");
-	    const tokens = word.split("=");
-	    tokens.forEach(async (token) => {
-		// .then((info) => {
+	    word.split("=").forEach((token) =>
+				    allwords[allwords.length] = [word,token]);
+	});
+	const resolves = allwords.map(async ([word,token]) => {
+	    var v = [];
+	    try {
+		console.log("352: " + token);
+		v = await this.fetchRoot(token);
+	    } catch (err) {
 		try {
-		    let results = await this.fetchRoot(token);
-		    this.setRootContent(ieWords, results);
+		    v = await this.fetchRoot(token + "*");
 		} catch (err) {
 		    try {
-			let results = await this.fetchRoot(token + "*");
-			this.setRootContent(ieWords, results);
+			v = await this.searchRoots(word);
 		    } catch (err) {
-			let results = await this.searchRoots(word);
-			if (results) 
-			    this.setRootContent(ieWords, results);
+			console.log("363");
 		    }
 		}
-/*
-	    }).catch((err) => {
-		console.log(err);
-		rootId = rootId + "*";
-		return remoteDatabase.get(rootId).then( function(result) {
-		    const content = rootParser.parseContent(result.content);
-		    results[results.length] = [rootId, content];
-		    console.log("289");
-		    console.log(results);
-		    // return content;
-		    // outParsed.innerHTML = content;
-		}).catch(function(err) {		    
-		    console.log("Get failed");
-		});
-		// return "";
-*/		
-	    });
+	    }
+	    return v;
+	    
 	});
+	this.setRootContent(ieWords, resolves);
+	console.log("354: " + resolves.length);
     }
 
-    setRootContent(ieWords, results) {
-	results.forEach((result) => {
-	    // map = ieLinks ?
-	    const rootId = result[0];
-	    const content = result[1];
+    setRootContent(ieWords, resolves) {
+	Promise.all(resolves).then((results) => {
+	    console.log(results);
 	    const map = new Map();
-	    map.set(ieWords, content);
-	    // if (ieLinks.size > 0) {
-	    this.setState({ieLinks: map});
-	    return;
+	    results.forEach((result) => {
+		console.log("376: " + result);
+		if (result && result[0] && result[0].length) {
+		    // map = ieLinks ?
+		    const rootId = result[0][0];
+		    const content = result[0][1];
+		    map.set(ieWords, content);
+		    // if (ieLinks.size > 0) {
+		    // return;
+		}
+	    });
+	    this.setState({ieLinks: map});	    
 	});
     }
     
@@ -421,6 +415,7 @@ class App extends Component {
 	    const results = [[rootId, content]];
 	    return results;
 	}
+	return null;
 	// });
 	// return content;
 	// outParsed.innerHTML = content;	
