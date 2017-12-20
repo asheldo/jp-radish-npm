@@ -81,9 +81,9 @@ class Word extends Component {
 	return (
 		<div key={this.props.id}>
 		<p>
+		<a href='' onClick={this.props.onClickWord}>&lt;&lt;</a>
 		({this.props.ieLang})&nbsp;
 		<span>{this.props.ieWords} ... {date}</span>
-		<a href='' onClick={this.props.onClickWord}>&gt;&gt;</a>
 		</p>
 		</div>
 	);	    
@@ -278,6 +278,7 @@ class App extends Component {
 
 	        <table width="100%"><tbody><tr>
 		<td width="50%">
+		<h3>PIE Root</h3>		
 		<Links wordsAndLinks={ieLinks} />
 		</td>
 
