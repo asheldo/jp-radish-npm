@@ -14,37 +14,38 @@ export function index(db) {
     });
 }
 
-export async function search(db, ieWords) {
+export async function search(db, ieWords, limit) {
     //    return null;
     const words = ieWords.split("=");
     const root = words[0], definition = words[words.length ? 1 : 0];
-    console.log(root + " " + definition);
-    const matcher = new RegExp("\/" + root.substring(0,1));
+    console.log(root.substring(0,1) + " " + definition);
+    const matcher = new RegExp(// "\/" +
+	root.substring(0,1));
     var i = 0;
     const result = await db.search({
 	query: definition,
 	fields: ['content'],
-	limit: 2,
+	limit: limit,
 	filter: function (doc) {
-	    const incl = matcher.test(doc._id); //. === 'person'; // only index persons
-	    if (incl && ++i < 200)
-		console.log(doc._id);
+	    const start = parseInt(doc.pageStart);
+	    const incl = matcher.test(doc._id) || start < 25; 
 	    return incl;
 	},
 	highlighting: true
-//     }).then(function (result) {
-	 // handle results	 
-//     }).catch(function (err) {
-	// handle error
     });
-    console.log(result);
+    console.log(result ? result.rows.length : 0);
     if (result && result.rows && result.rows.length > 0) {
-	const id = result.rows[0].id;
-	const root = await db.get(id);
-	console.log(root);
-	return root;
+	console.log(result.rows.length);
+	// const id = result.rows[0].id;
+	//	    const root = await db.get(id);
+	//    console.log(root);
+	//    return root;
+	const ids = result.rows.map((row) => row.id);
+	console.log(ids);
+	const roots = await db.allDocs({keys: ids, include_docs: true});
+	return roots.rows.map((row) => row.doc);
     }
-    return null;
+    return [];
 }
     
 /*

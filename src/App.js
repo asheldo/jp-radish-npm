@@ -188,6 +188,7 @@ class App extends Component {
 	this.state = {
 	    newWord: '',
 	    words: [],
+	    searchLimit: 2,
 	    ieLinks: new Map(),
 	    ieLinksList: new Map()
 	};
@@ -293,6 +294,8 @@ class App extends Component {
 	const onClickAdd = this.addWord;
 	const onClickTest = this.handleWordLink;
 	const onChangeLink = this.handleChangeLink;
+	const limitOptions = [1,2,3,4,5].map(
+	    (i) => (<option key={i} value={i}>{i}</option>));
 	return (
 		<div className="App">
 		
@@ -331,7 +334,12 @@ class App extends Component {
 		</div>		
 		<hr/>
 		
-		<Words words={wordsContent} onClickWord={onClickWord} />
+		<table width="100%"><tbody><tr><td>
+		Limit:<br/><select>{limitOptions}</select>
+		</td><td>
+		<Words words={wordsContent} onClickWord={onClickWord} /></td>
+		</tr></tbody></table>
+		
 		</td>
 		</tr></tbody></table>
 		
@@ -444,33 +452,24 @@ class App extends Component {
 	let rootId = proposed;
 	const remoteDatabase = roots.database();
 	const result = await remoteDatabase.get(rootId);
-	// .then( (result) => {
 	const content = rootParser.parseContent(result.content);
 	const results = [[rootId, content]];
 	return results;
-	// return content;
-	// outParsed.innerHTML = content;	
     }
 
-    // 
+    
     async searchRoots(words) {
 	const db = roots.database();
-	// words.forEach(async (word) => {
-	const result = await rootSearch.search(db, words);
-	// .then( (result) => {
-	if (result) {
-	    const content = rootParser.parseContent(result.content);
-	    const rootId = result._id;
-	    const results = [[rootId, content]];
-	    return results;
+	const results = await rootSearch.search(db, words,
+					       this.state.searchLimit);
+	if (results && results.length) {
+	    return results.map((result) => {
+		const content = rootParser.parseContent(result.content);
+		return [result._id, content];
+	    });
 	}
-	return null;
-	// });
-	// return content;
-	// outParsed.innerHTML = content;	
-    }
-    
-    
+	return [];
+    }    
 }
 
 export default App;
