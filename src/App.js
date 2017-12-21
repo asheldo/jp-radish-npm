@@ -43,7 +43,7 @@ class Links extends Component {
 	    var contents = (<div>...</div>);
 	    map.forEach((contentVal, ieWordsKey, map) => {
 		// console.log("37: " + contentVal);
-		console.log(contentVal);
+		console.log(contentVal.substring(0,20));
 		// console.log(map);
 		const id = ieWordsKey;
 		const parts = contentVal.split(":");
@@ -59,6 +59,28 @@ class Links extends Component {
 	}
     }
 }
+
+class LinksList extends Component {
+    render() {
+	const map = this.props.wordsAndLinksList;
+	if (map == null) {
+	    return (<select></select>);
+	} else {
+	    const onChange = this.props.onChange(map);
+	    console.log(map.keys());
+	    const options = [];
+	    // options[0] = (<option key="0" value=""></option>);
+	    map.forEach((contentVal, ieWordsKey, map) => {
+		options[options.length] =
+		    (<option key={options.length} value={ieWordsKey}>
+		     {options.length+1}: {ieWordsKey}
+		     </option>)
+	    });
+	    return (<select onChange={onChange}>{options}</select>);
+	}
+    }
+}
+
 
 class Words extends Component {
     render() {
@@ -166,12 +188,14 @@ class App extends Component {
 	this.state = {
 	    newWord: '',
 	    words: [],
-	    ieLinks: new Map()
+	    ieLinks: new Map(),
+	    ieLinksList: new Map()
 	};
 	this.subs = [];
 	this.addWord = this.addWord.bind(this);
 	this.handleChangeLang = this.handleChangeLang.bind(this);
 	this.handleChangeWords = this.handleChangeWords.bind(this);
+	this.handleChangeLink = this.handleChangeLink.bind(this);
 	this.handleWordProcessor = this.handleWordProcessor.bind(this);
 	this.handleWordLink = this.handleWordLink.bind(this);
     }
@@ -259,6 +283,7 @@ class App extends Component {
 
     render() {
 	const ieLinks = this.state.ieLinks;
+	const ieLinksList = this.state.ieLinksList;
 	const newLang = this.state.newLang;
 	const newWords = this.state.newWords;
 	const onChangeLang = this.handleChangeLang;
@@ -267,6 +292,7 @@ class App extends Component {
 	const onClickWord = this.handleWordProcessor;
 	const onClickAdd = this.addWord;
 	const onClickTest = this.handleWordLink;
+	const onChangeLink = this.handleChangeLink;
 	return (
 		<div className="App">
 		
@@ -278,8 +304,14 @@ class App extends Component {
 
 	        <table width="100%"><tbody><tr>
 		<td width="50%">
-		<h3>PIE Root</h3>		
+	        <table width="100%"><tbody><tr>
+		<td></td>
+		<td><h3>PIE Root</h3></td>
+		<td><LinksList wordsAndLinksList={ieLinksList}
+	    onChange={onChangeLink}/></td>		
+		</tr><tr><td colSpan="3">
 		<Links wordsAndLinks={ieLinks} />
+		</td></tr></tbody></table>
 		</td>
 
 		<td width="50%" style={{verticalAlign:'top'}}>
@@ -309,6 +341,16 @@ class App extends Component {
 	);
     }
 
+    handleChangeLink(map) {
+	return (event) => {
+	    const oneMap = new Map();
+	    const key = event.target.value;
+	    const content = map.get(key);
+	    oneMap.set(key, content);
+	    this.setState({ieLinks: oneMap});
+	}
+    }
+    
     handleChangeWords(event) {
 	this.setState({newWords: event.target.value});
     }
@@ -344,51 +386,57 @@ class App extends Component {
     }
 
     fetchPokornyRoots(ieWords) {
-	const words = ieWords.split(";");
+	const wordDefinitions = ieWords.split(";");
 	var allwords = [];
-	words.forEach((word) => {
-	    word.split("=").forEach((token) =>
-				    allwords[allwords.length] = [word,token]);
+	wordDefinitions.forEach((wordDef) => {
+	    wordDef.split("=").forEach(
+		(token) => allwords[allwords.length] = [wordDef, token]);
 	});
-	const resolves = allwords.map(async ([word,token]) => {
-	    var v = [];
+	const rootSetResolves = allwords.map(async ([wordDef, token]) => {
+	    var rootSet = [];
 	    try {
-		console.log("352: " + token);
-		v = await this.fetchRoot(token);
+		// console.log("352: " + token);
+		rootSet = await this.fetchRoot(token);
 	    } catch (err) {
 		try {
-		    v = await this.fetchRoot(token + "*");
+		    rootSet = await this.fetchRoot(token + "*");
 		} catch (err) {
 		    try {
-			v = await this.searchRoots(word);
+			rootSet = await this.searchRoots(wordDef);
 		    } catch (err) {
-			console.log("363");
+			console.log("nothing found");
 		    }
 		}
 	    }
-	    return v;
-	    
+	    return rootSet;
 	});
-	this.setRootContent(ieWords, resolves);
-	console.log("354: " + resolves.length);
+	this.setRootContent(ieWords, rootSetResolves);
+	console.log("354: " + rootSetResolves.length);
     }
 
-    setRootContent(ieWords, resolves) {
-	Promise.all(resolves).then((results) => {
-	    console.log(results);
-	    const map = new Map();
-	    results.forEach((result) => {
-		console.log("376: " + result);
-		if (result && result[0] && result[0].length) {
-		    // map = ieLinks ?
-		    const rootId = result[0][0];
-		    const content = result[0][1];
-		    map.set(ieWords, content);
-		    // if (ieLinks.size > 0) {
-		    // return;
+    setRootContent(ieWords, rootSetResolves) {
+	Promise.all(rootSetResolves).then((rootSets) => {
+	    // console.log(results);
+	    const mapOne = new Map();
+	    const mapMore = new Map();
+	    rootSets.forEach((rootSet) => {
+		if (rootSet) {
+		    console.log(rootSet.length);
+		    rootSet.forEach((root) => {
+			if (root && root.length) {
+			    console.log(root);
+			    const rootId = root[0];
+			    const content = root[1];
+			    mapMore.set(rootId, content);
+			    if (mapOne.size == 0) {
+				mapOne.set(ieWords, content);
+				this.setState({ieLinks: mapOne});
+			    }
+			}
+		    });
 		}
 	    });
-	    this.setState({ieLinks: map});	    
+	    this.setState({ieLinksList: mapMore});
 	});
     }
     
@@ -412,7 +460,7 @@ class App extends Component {
 	// .then( (result) => {
 	if (result) {
 	    const content = rootParser.parseContent(result.content);
-	    const rootId = result.id;
+	    const rootId = result._id;
 	    const results = [[rootId, content]];
 	    return results;
 	}
