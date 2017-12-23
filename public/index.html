@@ -21,7 +21,33 @@
     -->
     <title>React App</title>
   </head>
-  <body>
+  <body onLoad="consoleShow();">
+    <script>
+      /** date: 2017-12-10 */
+      function linkKeywordDefinition(link) {
+          let value = link.innerHTML;
+          if (value.substring(0, 1) === "`") 
+              value = value.substring(1, value.length-1);      
+          window.prompt("Copy definition to clipboard: Ctrl+C, Enter", value);
+      }
+      function linkLanguage(lang, link) {
+          let value = link.innerHTML;
+          if (value.substring(0, 1) === "`") 
+              value = value.substring(1, value.length-1);      
+          window.prompt("Copy " + lang + " word to clipboard: Ctrl+C, Enter", value);
+      }
+
+      function consoleShow() {				   
+	console.error = console.log = (function (old_function, div_log) {
+	    return function(text) {
+		old_function(text);
+		div_log.innerHTML += text;
+		// alert(text);
+	    }
+	} (console.log.bind(console), document.getElementById("div_log")));
+      }	       
+
+    </script>
     <noscript>
       You need to enable JavaScript to run this app.
     </noscript>
@@ -35,6 +61,7 @@
 
       To begin the development, run `npm start` or `yarn start`.
       To create a production bundle, use `npm run build` or `yarn build`.
-    -->
+      -->
+    <div id="div_log"></div>
   </body>
 </html>

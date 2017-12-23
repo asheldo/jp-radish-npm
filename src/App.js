@@ -31,6 +31,7 @@ const dbName = 'pokornyx17121101';
 const languages = language.languagesValAndName();
 
 class Links extends Component {
+    
     render() {
 	const map = this.props.wordsAndLinks;
 	if (map == null) {
@@ -39,12 +40,8 @@ class Links extends Component {
 		    dangerouslySetInnerHTML={{__html: '<pre>...</pre>'}} />);
 
 	} else {
-	    console.log("31: " + map.size);
 	    var contents = (<div>...</div>);
 	    map.forEach((contentVal, ieWordsKey, map) => {
-		// console.log("37: " + contentVal);
-		console.log(contentVal.substring(0,20));
-		// console.log(map);
 		const id = ieWordsKey;
 		const parts = contentVal.split(":");
 		const engl = parts[2];
@@ -67,7 +64,6 @@ class LinksList extends Component {
 	    return (<select></select>);
 	} else {
 	    const onChange = this.props.onChange(map);
-	    console.log(map.keys());
 	    const options = [];
 	    // options[0] = (<option key="0" value=""></option>);
 	    map.forEach((contentVal, ieWordsKey, map) => {
@@ -82,13 +78,12 @@ class LinksList extends Component {
 }
 
 
-class Words extends Component {
+class WordsList extends Component {
     render() {
 	const wordProcess = this.props.onClickWord;
 	const words = this.props.words;
-	return words.map(
+	return words == null ? [] : words.map(
 	    ({id, ieLang, ieWords}) => {
-		console.log("34: " + ieWords);
 		const wordProcessOne = wordProcess(ieWords);
 		return (<Word key={id} id={id}
 			ieLang={ieLang} ieWords={ieWords}
@@ -113,7 +108,7 @@ class Word extends Component {
 }
     
 // Auto-suggest
-class Language extends Component {
+class LanguageWords extends Component {
     constructor(props) {
 	super(props);
 	// Autosuggest is a controlled component.
@@ -123,13 +118,121 @@ class Language extends Component {
 	// and they are initially empty because the Autosuggest is closed.
 	this.state = {
 	    value: '',
-	    suggestions: []
+	    suggestions: [],
+	    newWord: '',
+	    newLang: '',
+	    words: [],
 	};
+	this.subscriptions = [];
+	this.addWord = this.addWord.bind(this);
+	this.handleChangeLang = this.handleChangeLang.bind(this);
+	this.handleChangeWords = this.handleChangeWords.bind(this);
+	this.onTest = this.onTest.bind(this);
     }
-    onChange = (event, { newValue }) => {
+
+    async componentDidMount() {
+	this.db = await this.createWordsDatabase();
+	// Subscribe to query to get all documents
+	const sub = this.db.words.find().sort({id: 1})
+	      .$.subscribe(
+		  words => {
+		      if (!words)
+			  return;
+		      toast('Reloading words');
+		      this.setState({words: words.reverse()});
+		      this.props.handleWordsContent(this.state.words);
+		  });
+	this.subscriptions.push(sub);
+    }
+    
+    async createWordsDatabase() {
+	// password must have at least 8 characters
+	const db = await RxDB.create(
+	    {name: dbName,
+	     adapter: 'idb',
+	     password: '12345678'}
+	);
+	console.dir(db);
+	// show who's the leader in page's title
+	db.waitForLeadership().then(() => {
+	    document.title = '♛ ' + document.title;
+	});
+	// create collection
+	const wordsCollection = await db.collection({
+	    name: 'words',
+	    schema: schema
+	});
+	// set up replication
+	this.setupReplication(wordsCollection);	
+	return db;
+    }
+
+    setupReplication(collection) {
+	const replicationState = collection.sync({
+	    remote: syncURL + dbName + '/' });
+	this.subscriptions.push(
+	    replicationState.change$.subscribe(
+		change => {
+		    toast('Replication change');
+		    console.dir(change)
+		})
+	);
+	this.subscriptions.push(
+	    replicationState.docs$.subscribe(
+		docData => console.dir(docData))
+	);
+	this.subscriptions.push(
+	    replicationState.active$.subscribe(
+		active => toast(`Replication active: ${active}`))
+	);
+	this.subscriptions.push(
+	    replicationState.complete$.subscribe(
+		completed => toast(`Replication completed: ${completed}`))
+	);
+	this.subscriptions.push(
+	    replicationState.error$.subscribe(
+		error => {
+		    toast('Replication Error');
+		    console.dir(error)
+		})
+	);
+    }
+    
+    componentWillUnmount() {
+	// Unsubscribe from all subscriptions
+	this.subscriptions.forEach(sub => sub.unsubscribe());
+    }
+
+    // handlers
+    
+    handleChangeLang = (event, { newValue }) => {
 	this.setState({ value: newValue });
-	this.props.onChangeLanguage(event);
+	this.setState({ newLang: newValue });
     };
+
+    handleChangeWords(event) {
+	this.setState({newWords: event.target.value});
+    }
+
+    async addWord() {
+	const id = Date.now().toString();
+	const newWord = {
+	    id,
+	    ieLang: this.state.newLang,
+	    ieWords: this.state.newWords
+	};
+	const wordsCollection = this.db.words;
+	await wordsCollection.insert(newWord);	
+	this.setState({newLang: '', newWords: ''});
+    }
+
+    onTest(event) {
+	// handleWordLink(event, ieWords) {
+	event.preventDefault();
+	const ieWords = this.state.newWords; // words;
+	return this.props.onTest(ieWords);
+    }
+    
     // Teach Autosuggest how to calculate suggestions for any given input value.
     getSuggestions(value) {
 	const inputValue = value == null ? "" : value.trim().toLowerCase();
@@ -161,22 +264,39 @@ class Language extends Component {
     }
     getSuggestionValue(suggestion) { return suggestion.val; }
     //
+    
     render() {
 	const { value, suggestions } = this.state;
 	// Autosuggest will pass through all these props to the input.
 	const inputProps = { placeholder: 'Type a language',
-			     value, onChange: this.onChange };
+			     value, onChange: this.handleChangeLang };
 	// Finally, render it!
-	return (
-		<Autosuggest
-            suggestions={suggestions}
+	const langIn = (
+		<Autosuggest suggestions={suggestions} inputProps={inputProps}
             onSuggestionsFetchRequested={this.onSuggestionsFetchRequested}
             onSuggestionsClearRequested={this.onSuggestionsClearRequested}
             getSuggestionValue={this.getSuggestionValue}
             renderSuggestion={this.renderSuggestion}
-            inputProps={inputProps}
 		/>
 	);
+	const onChangeWords = this.handleChangeWords;
+	const wordsContent = this.state.words;
+	const onClickAdd = this.addWord;
+	const onClickTest = this.onTest;
+	return (
+		<table width="100%"><tbody><tr>
+		<td style={{verticalAlign:"top", textAlign:"right"}}>
+		{langIn}
+		</td>
+		<td style={{verticalAlign:"top", textAlign:"left"}}>
+		<input type="text"
+	    value={this.state.newWords} onChange={onChangeWords}
+	    style={{width:'30em'}} placeholder="words" />
+		<br/>
+		<button onClick={onClickAdd}>Add word</button>
+		<button onClick={onClickTest}>&gt;&gt; Test</button>
+		</td>
+		</tr></tbody></table>);
     }
 }
 
@@ -184,116 +304,42 @@ class App extends Component {
 
     constructor(props) {
 	super(props);
-	// db, indogermDb
 	this.state = {
-	    newWord: '',
-	    words: [],
 	    searchLimit: 2,
 	    ieLinks: new Map(),
 	    ieLinksList: new Map()
 	};
-	this.subs = [];
-	this.addWord = this.addWord.bind(this);
-	this.handleChangeLang = this.handleChangeLang.bind(this);
-	this.handleChangeWords = this.handleChangeWords.bind(this);
 	this.handleChangeLink = this.handleChangeLink.bind(this);
 	this.handleWordProcessor = this.handleWordProcessor.bind(this);
 	this.handleWordLink = this.handleWordLink.bind(this);
+	this.handleWordsContent = this.handleWordsContent.bind(this);
     }
 
     async indogermDatabase() {
-	const db = null;
 	roots.syncAndConnect()
 	    .then((info) => this.rootDatabaseConnected = 1)
 	    .catch((err) => console.log(err));
 	// await RxDB.create({name: indogermDbName, adapter: 'idb'});
     }
     
-    async createDatabase() {
-	// password must have at least 8 characters
-	const db = await RxDB.create(
-	    {name: dbName,
-	     adapter: 'idb',
-	     password: '12345678'}
-	);
-	console.dir(db);
-	// show who's the leader in page's title
-	db.waitForLeadership().then(() => {
-	    document.title = '♛ ' + document.title;
-	});
-	// create collection
-	const wordsCollection = await db.collection({
-	    name: 'words',
-	    schema: schema
-	});
-	// set up replication
-	this.setupReplication(wordsCollection);
-	return db;
-    }
-
-    setupReplication(collection) {
-	const replicationState = collection.sync({
-	    remote: syncURL + dbName + '/' });
-	this.subs.push(
-	    replicationState.change$.subscribe(
-		change => {
-		    toast('Replication change');
-		    console.dir(change)
-		})
-	);
-	this.subs.push(
-	    replicationState.docs$.subscribe(
-		docData => console.dir(docData))
-	);
-	this.subs.push(
-	    replicationState.active$.subscribe(
-		active => toast(`Replication active: ${active}`))
-	);
-	this.subs.push(
-	    replicationState.complete$.subscribe(
-		completed => toast(`Replication completed: ${completed}`))
-	);
-	this.subs.push(
-	    replicationState.error$.subscribe(
-		error => {
-		    toast('Replication Error');
-		    console.dir(error)
-		})
-	);
-    }
     
     async componentDidMount() {
-	this.db = await this.createDatabase();
-	// Subscribe to query to get all documents
-	const sub = this.db.words.find().sort({id: 1})
-	      .$.subscribe(
-		  words => {
-		      if (!words)
-			  return;
-		      toast('Reloading words');
-		      this.setState({words: words.reverse()});
-		  });
-	this.subs.push(sub);
 	this.indogermDatabase();
     }
 
     componentWillUnmount() {
-	// Unsubscribe from all subscriptions
-	this.subs.forEach(sub => sub.unsubscribe());
     }
 
+    handleWordsContent(wordsContent) {
+	this.setState({wordsContent: wordsContent});
+    }
+    
     render() {
 	const ieLinks = this.state.ieLinks;
 	const ieLinksList = this.state.ieLinksList;
-	const newLang = this.state.newLang;
-	const newWords = this.state.newWords;
-	const onChangeLang = this.handleChangeLang;
-	const onChangeWords = this.handleChangeWords;
-	const wordsContent = this.state.words;
 	const onClickWord = this.handleWordProcessor;
-	const onClickAdd = this.addWord;
-	const onClickTest = this.handleWordLink;
 	const onChangeLink = this.handleChangeLink;
+	const wordsContent = this.state.wordsContent;
 	const limitOptions = [1,2,3,4,5].map(
 	    (i) => (<option key={i} value={i}>{i}</option>));
 	return (
@@ -320,24 +366,15 @@ class App extends Component {
 		<td width="50%" style={{verticalAlign:'top'}}>
 		<div className="add-word-div">
 		<h3>Add Word</h3>		
-		<table width="100%"><tbody><tr>
-		<td style={{verticalAlign:"top", textAlign:"right"}}>
-		<Language onChangeLanguage={onChangeLang} /></td>
-		<td style={{verticalAlign:"top", textAlign:"left"}}>
-		<input type="text" value={newWords} style={{width:'30em'}}
-	    onChange={onChangeWords} placeholder="words" />
-		<br/>
-		<button onClick={onClickAdd}>Add word</button>
-		<button onClick={onClickTest}>&gt;&gt; Test</button></td>
-		</tr></tbody></table>
-		
+		<LanguageWords db={this.db} onTest={this.handleWordLink}
+	    handleWordsContent={this.handleWordsContent} />
 		</div>		
 		<hr/>
 		
 		<table width="100%"><tbody><tr><td>
 		Limit:<br/><select>{limitOptions}</select>
 		</td><td>
-		<Words words={wordsContent} onClickWord={onClickWord} /></td>
+		<WordsList words={wordsContent} onClickWord={onClickWord} /></td>
 		</tr></tbody></table>
 		
 		</td>
@@ -359,29 +396,10 @@ class App extends Component {
 	}
     }
     
-    handleChangeWords(event) {
-	this.setState({newWords: event.target.value});
-    }
-
-    handleChangeLang(event) {
-	this.setState({newLang: event.target.value});
-    }
-
-    async addWord() {
-	const id = Date.now().toString();
-	const newWord = {
-	    id,
-	    ieLang: this.state.newLang,
-	    ieWords: this.state.newWords
-	};
-	await this.db.words.insert(newWord);	
-	this.setState({newLang: '', newWords: ''});
-    }
-
     // like handleWordProcessor(ieWords);
-    handleWordLink(event) {
-	event.preventDefault();
-	const ieWords = this.state.newWords; // words;
+    handleWordLink(ieWords) {
+//	event.preventDefault();
+//	const ieWords = this.state.newWords; // words;
 	// console.log("310: " + ieWords);
 	this.fetchPokornyRoots(ieWords);
     }    
@@ -436,7 +454,7 @@ class App extends Component {
 			    const rootId = root[0];
 			    const content = root[1];
 			    mapMore.set(rootId, content);
-			    if (mapOne.size == 0) {
+			    if (mapOne.size === 0) {
 				mapOne.set(ieWords, content);
 				this.setState({ieLinks: mapOne});
 			    }
@@ -469,7 +487,8 @@ class App extends Component {
 	    });
 	}
 	return [];
-    }    
+    }
+
 }
 
 export default App;
