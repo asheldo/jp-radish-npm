@@ -1,4 +1,6 @@
 // pokorny-roots
+import * as rootsGroup from './pokorny-roots-group';
+
 var PouchDB = require('pouchdb-browser');
 // PouchDB.plugin(require('pouchdb-adapter-idb'));
 
@@ -12,49 +14,88 @@ const host = "192.168.0.6";
 const uriDatabases = // (host) =>
       `http://${host}:5984/`;
 // 
-var remoteDatabase, remoteKeywordsDb, remoteMemoRootsDb;
-
+var pDatabase, pKeywordsDb, pMemoRootsDb;
 
 export function database() {
-    return remoteDatabase;
+    return pDatabase;
 }
 
 /**
  * messes with emacs tabs, so at end of file
  */
 function initData() {
-    remoteDatabase = new PouchDB(`${nameDatabase}`);
-    remoteKeywordsDb = new PouchDB(`${nameKeywordsDb}`);
-    remoteMemoRootsDb = new PouchDB(`${nameMemoRootsDb}`);    
+    pDatabase = new PouchDB(`${nameDatabase}`);
+    pKeywordsDb = new PouchDB(`${nameKeywordsDb}`);
+    pMemoRootsDb = new PouchDB(`${nameMemoRootsDb}`);    
 }
 
 export function syncAndConnect() {
     initData();
     syncDomAttribute('data-sync-state', 'syncing-data');
-    return to(remoteKeywordsDb,   nameKeywordsDb)
+    return to(pKeywordsDb,   nameKeywordsDb)
 	.then(sync2)
 	.catch(sync2);
+}
+
+/*
+    const results = {
+	rootGroups: rootGroups,
+	allRoots: allRoots,
+	groupRoots: groupRoots,
+	allFirstRootsOptions: allFirstRootsOption
+    };
+*/
+
+export function fetchRootGroupsOptions() {
+    // let select = document.getElementById("groups");
+    return rootsGroup.fetchRootGroupsOptions();
+    // select.options[0] = new Option("", "");
+}
+
+export function fetchAllFirstRootsSelect() {
+    //	let select = document.getElementById("allfirstroots");
+    return rootsGroup.fetchAllFirstRootsSelect();
+	// allFirstRootsOptions; // select.options[0] = new Option("", "");
+    // todo
+    // select.options[select.options.length] = new Option(match[1], id);
+}
+
+// array of duals/arrays
+export function fetchAllRootsOptions() {
+    // let select = document.getElementById("allroots");
+    // select.options[0] = new Option("", "");
+    return rootsGroup.fetchAllRootsOptions();
+}
+
+/**
+ * one alpha group of roots
+ */    
+export function listGroupRoots(groupSelect) {
+    return rootsGroup.listGroupRoots(groupSelect);
+}
+
+// Process rows...
+function handleRows(results) {
+    console.log(results);
+    // rootsAndGroups =
+    rootsGroup.handleRows(results);
 }
 
 function langs() {
     console.log("langs?");
 }
 
-function handleRows(results) {
-    console.log(results);
-}
-
 /**
  * after sync, failure or success
  */
 function connect() {
-    remoteDatabase.info()
+    pDatabase.info()
 	.then(function (info) {
 	    console.log(info);
 	});
-    remoteDatabase.allDocs({
-	include_docs: true,
-	attachments: true
+    pDatabase.allDocs({
+	include_docs: true, // true,
+	attachments: false // true
     })
 	.then(handleRows)
 	.catch(err => console.log(err));
@@ -72,23 +113,23 @@ function from(db, dbName) {
 
 function sync2(info) {
     console.log("2:" + info);
-    return from(remoteKeywordsDb, nameKeywordsDb)
+    return from(pKeywordsDb, nameKeywordsDb)
 	.then(sync3)
-    // Fast-forward, to setSessions()/connect(), if remote inaccessible
+    // Fast-forward, to setSessions()/connect(), if p inaccessible
 	.catch(syncRoots2);
 }
 
 function sync3(info) {
     console.log("3:" + info);
     langs();
-    return to(remoteMemoRootsDb,  nameMemoRootsDb)
+    return to(pMemoRootsDb,  nameMemoRootsDb)
 	.then(sync4)
 	.catch(sync4);
 }
 
 function sync4(info) {
     console.log("4:" + info);
-    return from(remoteMemoRootsDb,  nameMemoRootsDb)
+    return from(pMemoRootsDb,  nameMemoRootsDb)
 	.then(syncRoots)
 	.catch(syncRoots);
 }
@@ -96,7 +137,7 @@ function sync4(info) {
 function syncRoots(info) {
     console.log("5:" + info);
     syncDom('syncing roots data..');	
-    return to(remoteDatabase, nameDatabase)
+    return to(pDatabase, nameDatabase)
 	.then( syncRoots2)
 	.catch( syncRoots2);
 }
@@ -105,7 +146,7 @@ function syncRoots2(info) {
     console.log("6:" + info);
     // setSessions(); // setup typeahead
     // langs();
-    return from(remoteDatabase, nameDatabase)
+    return from(pDatabase, nameDatabase)
 	.then((info) => {
 	    syncDom('sync done - building...');
 	    connect();
