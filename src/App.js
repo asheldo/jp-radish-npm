@@ -6,7 +6,7 @@ import * as roots from './pokorny-roots';
 import * as rootParser from './pokorny-root-parser';
 import * as rootSearch from './pokorny-root-search';
 
-import { LanguageWords } from './components/language-words';
+import { LanguageWords, IETranslations } from './components/language-words';
 
 import {QueryChangeDetector} from 'rxdb';
 
@@ -16,6 +16,8 @@ import * as moment from 'moment';
 
 QueryChangeDetector.enable();
 QueryChangeDetector.enableDebugging();
+
+// Simple render components
 
 class Links extends Component {
     
@@ -174,7 +176,10 @@ class App extends Component {
 		<strong>Translations</strong></a>
 		<div style={{display: (this.state.visibleTranslations
 					  ? 'inline' : 'none')}}>
-		...
+
+	    	<IETranslations 
+		/>
+
 		</div>
 		<hr/>
 		</div>
@@ -193,7 +198,7 @@ class App extends Component {
 		<strong>Add Word</strong></a>		
 		<div style={{display: (this.state.visibleAddWord
 					  ? 'inline' : 'none')}}>
-	    	<LanguageWords db={this.db} onTest={this.handleWordLink}
+	    	<LanguageWords onTest={this.handleWordLink}
 	    handleWordsContent={this.handleWordsContent} />
 		<hr/>
 		<table width="100%"><tbody><tr><td>
