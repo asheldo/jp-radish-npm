@@ -100,19 +100,20 @@ export const pokornyTranslationSchema = {
 			type: 'string',
 			description: 'timestamp'
 		    },
-		    ieLang: {
+		    transLang: {
 			type: 'string'
 		    },
-		    ieWords: {
+		    transWords: {
 			type: 'string',
 		    },
 		    references: {
 			type: 'string'
 		    }
 		},
-		required: ['targetLang', 'translation', 'description']
+		required: ['transLang', 'transWords', 'timestamp']
 	    }
 	}
     },
-    required: ['timestamp','ieLang','ieWords','lineLocator','lineTranslations']
+    required: ['timestamp','ieLang','ieWords',
+	       'lineLocator','lineTranslations','wordEtymonLemmas']
 }

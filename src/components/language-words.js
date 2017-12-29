@@ -10,7 +10,7 @@ RxDB.plugin(require('pouchdb-adapter-idb'));
 RxDB.plugin(require('pouchdb-adapter-http'));
 
 // v. indogermanishes etymologisches worterbuch pokorny17112501
-const dbName = 'pokornyx17121101';
+const wordsDBName = 'pokornyx17121101';
 const translationsDBName = 'ietranslations17122704';
 // indogermDbName = 'pokorny17112501';
 // piememoroots17102401 piekeys17102401
@@ -39,25 +39,26 @@ class DBSubscription {
 	//	collections.forEach(async ({name, schema}) => {
 	const name = collections[0].name;
 	const schema = collections[0].schema;
-	    const collection = await db.collection({
-		name: name,
-		schema: schema
-	    });
-	    console.dir(collection);
-	    // set up replication
-	    await this.setupReplication(collection);
+	const collection = await db.collection({
+	    name: name,
+	    schema: schema
+	});
+	console.dir(collection);
+	// set up replication
+	await this.setupReplication(collection, dbName);
 //	});
 	return db;
     }
 
     // App is ready for multi-user behavior
-    setupReplication(collection) {
+    setupReplication(collection, dbName) {
 	const replicationState = collection.sync({
-	    remote: syncURL + dbName + '/' });
+	    remote: syncURL + dbName + '/'
+	});
 	this.subscriptions.push(
 	    replicationState.change$.subscribe(
 		change => {
-		    toast('Replication change');
+		    toast('change');
 		    console.dir(change)
 		})
 	);
@@ -67,16 +68,16 @@ class DBSubscription {
 	);
 	this.subscriptions.push(
 	    replicationState.active$.subscribe(
-		active => toast(`Replication active: ${active}`))
+		active => toast(`active:${active}`))
 	);
 	this.subscriptions.push(
 	    replicationState.complete$.subscribe(
-		completed => toast(`Replication completed: ${completed}`))
+		completed => toast(`completed:${completed}`))
 	);
 	this.subscriptions.push(
 	    replicationState.error$.subscribe(
 		error => {
-		    toast('Replication Error');
+		    toast('Error');
 		    console.dir(error)
 		})
 	);
@@ -101,15 +102,7 @@ export class IETranslations extends Component {
 	// and an onChange handler that updates this value (see below).
 	// Suggestions also need to be provided to the Autosuggest,
 	// and they are initially empty because the Autosuggest is closed.
-	this.state = {
-	    value: '',
-	    suggestions: [],
-	    ieWork: '',
-	    ieLang: '',
-	    ieWords: '',
-	    lineLocatorData: '',
-	    lineTranslations: [],
-	};
+	this.state = this.emptyState();
 	this.translationsDBSub = new DBSubscription();
 	this.upsertTranslation = this.upsertTranslation.bind(this);
 	this.handleChangeIELang = this.handleChangeIELang.bind(this);
@@ -128,16 +121,15 @@ export class IETranslations extends Component {
 			    collections,
 			    '♔ ');
 	// Subscribe to query to get all documents
-	const sub = this.translationsDB.translations.find().sort({id: 1}).$.subscribe(
-	    lineTranslations => {
-		if (!lineTranslations)
-		    return;
-		toast('Reloading translations');
-		this.setState({lineTranslations:
-			       lineTranslations}); //.reverse
-		// TODO
-		this.handleTranslationsContent(lineTranslations);
-	    });
+	const sub = this.translationsDB.translations
+	      .find().sort({id: 1}).$.subscribe(
+		  (lines) => {
+		      if (!lines)
+			  return;
+		      toast('Reloading translations');
+		      this.setState({lines: lines}); //.reverse
+		      // this.handleTranslationsContent(lines);
+		  });
 	this.translationsDBSub.subscribe(sub);
     }
     
@@ -146,23 +138,39 @@ export class IETranslations extends Component {
 	this.translationsDBSub.unsubscribe();
     }
 
-    // handlers
-    
     handleChangeIELang = (event, { newValue }) => {
 	this.setState({ value: newValue });
 	this.setState({ ieLang: newValue });
     };
 
     handleChangeIEWords(event) {
-	this.setState({ieWords: event.target.value});
+	const val = event.target.value;
+	this.setState({ieWords: val});
     }
 
+    // Replication
     handleChangeIEWork(event) {
-	this.setState({ieWork: event.target.value});
+	const val = event.target.value;
+	// do we need to create anew? clear the lineTranslations.
+	if (this.state.timestamp !== ""
+	    && this.state.lineTranslations.length > 0
+	    && this.state.ieLang !== val)
+	{
+	    this.setState({lineTranslations: []});
+	}
+	this.setState({ieWork: val});
     }
 
     handleChangeLineLocator(event) {
-	this.setState({lineLocatorData: event.target.value});
+	const val = event.target.value;
+	// do we need to create anew? clear the lineTranslations.
+	if (this.state.timestamp !== ""
+	    && this.state.lineTranslations.length > 0
+	    && this.state.ieLang !== val)
+	{
+	    this.setState({lineTranslations: []});
+	}
+	this.setState({lineLocatorData: val});
     }
 
     // TODO parse when adding/updating translation
@@ -170,20 +178,20 @@ export class IETranslations extends Component {
 	let lineLocator = null;
 	const value = this.state.lineLocatorData; // event.target.value;
 	const locators = value.split(",");
-	if (locators.length == 1 && locators[0].trim() != '') {
-	    lineLocator = { line: parseInt(locators[0]) };
-	} else if (locators.length == 2) {
-	    lineLocator = { verse: parseInt(locators[0]),
-			    line: parseInt(locators[1]) };
-	} else if (locators.length == 3) {
-	    lineLocator = { chapter: parseInt(locators[0]),
-			    verse: parseInt(locators[1]),
-			    line: parseInt(locators[2]) };
-	} else if (locators.length == 2) {
+	if (locators.length === 1 && locators[0].trim() !== '') {
+	    lineLocator = { line: parseInt(locators[0], 10) };
+	} else if (locators.length === 2) {
+	    lineLocator = { verse: parseInt(locators[0], 10),
+			    line: parseInt(locators[1], 10) };
+	} else if (locators.length === 3) {
+	    lineLocator = { chapter: parseInt(locators[0], 10),
+			    verse: parseInt(locators[1], 10),
+			    line: parseInt(locators[2], 10) };
+	} else if (locators.length === 2) {
 	    lineLocator = { book: locators[0],
-			    chapter: parseInt(locators[1]),
-			    verse: parseInt(locators[2]),
-			    line: parseInt(locators[3]) };
+			    chapter: parseInt(locators[1], 10),
+			    verse: parseInt(locators[2], 10),
+			    line: parseInt(locators[3], 10) };
 	}
 	lineLocator.work = this.state.ieWork;
 	return lineLocator; // this.setState({lineLocator: lineLocator});
@@ -191,6 +199,28 @@ export class IETranslations extends Component {
 
     handleTranslationsContent(translation) {
 
+    }
+
+    emptyState() {
+	return {
+	    timestamp: '',
+	    value: '',
+	    suggestions: [],
+	    ieWork: '',
+	    ieLang: '',
+	    ieWords: '',
+	    lineLocatorData: '',
+	    lineTranslations: [],
+	    wordEtymonLemmas: []
+	};
+    }
+
+    updateDoc(doc) {
+	doc.timestamp = Date.now().toString();
+	doc.ieLang = this.state.ieLang;
+	doc.ieWords = this.state.ieWords;
+	doc.lineTranslations = this.state.lineTranslations;
+	doc.wordEtymonLemmas = [];
     }
     
     async upsertTranslation() { // addLineAndTranslations() {
@@ -202,7 +232,8 @@ export class IETranslations extends Component {
 	    ieLang: this.state.ieLang,
 	    ieWords: this.state.ieWords,
 	    lineLocator: this.getLineLocator(),
-	    lineTranslations: []
+	    lineTranslations: this.state.lineTranslations,
+	    wordEtymonLemmas: []
 	};	
 	const collection = this.translationsDB.translations;
 	var doc = null;
@@ -212,14 +243,23 @@ export class IETranslations extends Component {
 	docs.forEach((rowDoc) => {
 	    doc = rowDoc;
 	});
-	if (doc == null) {	     
-	    await collection.insert(newTranslation);
-	} else {
+	if (doc != null) {
 	    console.log(doc);
+	    if (this.state.lineTranslations.length === 0) {
+		this.setState({lineTranslations: doc.lineTranslations});
+	    }
+	    if (this.state.ieWords.length === 0) {
+		this.setState({ieWords: doc.ieWords});
+	    }
+	    this.updateDoc(doc);
+	    await doc.save();
+	    // await collection.upsert(newTranslation);
+	} else {
+	    await collection.insert(newTranslation);
 	}
+	this.setState({timestamp: newTranslation.timestamp});
 	// this.setState({newLang: '', newWords: ''});
 	// add?
-
 	// this.setState({newLang: '', newWords: ''});
     }
 
@@ -269,6 +309,13 @@ export class IETranslations extends Component {
 	const onChangeLocator = this.handleChangeLineLocator;
 	const wordsContent = this.state.ieWords;
 	const onClickAdd = this.upsertTranslation;
+	const onClickClear = () => this.setState(this.emptyState());
+	const onClickNewLine = () => {
+	    const empty = [{ timestamp:  Date.now().toString() }];
+	    this.setState({
+		lineTranslations: this.state.lineTranslations.concat(empty)
+	    });
+	};
 	// const onClickTest = this.onTest;
 	return (
 		<table width="100%"><tbody><tr>
@@ -287,9 +334,60 @@ export class IETranslations extends Component {
 	    placeholder="locator (line #)" />
 		<br/>
 		<button onClick={onClickAdd}>Add/Update Trans.</button>
-		<button onClick={onClickAdd}>&gt;&gt; Test</button>
+		<button onClick={onClickClear}>—— Clear</button>
+		<button onClick={onClickNewLine}>+++ Add Line</button>
+		<br/>
+		<TranslationLineList lines={this.state.lineTranslations}/>
 		</td>
 		</tr></tbody></table>);
+    }
+}
+
+class TranslationLine extends Component {
+    constructor(props) {
+	super(props);
+    }
+
+    render() {
+	const onChangeLang = (event) =>
+	      this.props.line.transLang = event.target.value;
+	const onChangeWords = (event) =>
+	      this.props.line.transWords = event.target.value;
+	const onChangeRefer = (event) =>
+	      this.props.line.references = event.target.value;
+	return (
+		<div>
+	    	<input type="text"
+	    value={this.props.line.transLang} onChange={onChangeLang}
+	    style={{width:'10em'}} placeholder="lang" />
+	    	<input type="text"
+	    value={this.props.line.transWords} onChange={onChangeWords}
+	    style={{width:'30em'}} placeholder="translation" />
+		<br/>
+	    	<input type="text"
+	    value={this.props.line.references} onChange={onChangeRefer}
+	    style={{width:'30em'}} placeholder="references" />
+		</div>
+
+	)
+    }
+}
+
+class TranslationLineList extends Component {
+    constructor(props) {
+	super(props);
+    }
+    
+    render() {
+	var i = 0;
+	// const { value, suggestions } = this.state;
+	return this.props.lines.map((line) => {
+	    if (line && line.timestamp) {
+		return (<TranslationLine key={++i} line={line}/>)
+	    } else {
+		return (<span>...</span>)
+	    }
+	});
     }
 }
 
@@ -319,7 +417,8 @@ export class LanguageWords extends Component {
 
     async componentDidMount() {
 	this.wordsDB = await this.wordsDBSub
-	    .createDatabase(dbName, [{name: 'words', schema: pokornyWordsSchema}],
+	    .createDatabase(wordsDBName,
+			    [{name: 'words', schema: pokornyWordsSchema}],
 			    '♛ ');
 	// Subscribe to query to get all documents
 	const sub = this.wordsDB.words.find().sort({id: 1})
