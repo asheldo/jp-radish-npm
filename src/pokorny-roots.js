@@ -8,7 +8,7 @@ const nameDatabase = 'pokorny17112501',
       nameKeywordsDb = 'piekeys17102401',
       nameMemoRootsDb = 'piememoroots17102401';
 
-const syncURL = 'localhost';
+// const syncURL = 'localhost';
 
 const host = "192.168.0.6";
 const uriDatabases = // (host) =>

@@ -15,7 +15,7 @@ const translationsDBName = 'ietranslations17122704';
 // indogermDbName = 'pokorny17112501';
 // piememoroots17102401 piekeys17102401
 
-const syncURL = 'http://localhost:5984/';
+const syncURL = 'http://192.168.0.6:5984/';
 const languages = languagesValAndName();
 
 class DBSubscription {
@@ -338,8 +338,51 @@ export class IETranslations extends Component {
 		<button onClick={onClickNewLine}>+++ Add Line</button>
 		<br/>
 		<TranslationLineList lines={this.state.lineTranslations}/>
+		</td></tr>
+		<tr><td colSpan="2">
+		<hr/>
+		<Lines lines={this.state.lines}/>
 		</td>
 		</tr></tbody></table>);
+    }
+}
+
+class Line extends Component {
+    constructor(props) {
+	super(props);
+    }
+
+    render() {
+	const line = this.props.line;
+	const xit = this.onDelete(line);
+	return (<div>({line.ieLang}) {line.id}: {line.ieWords}
+		<button onClick={xit}>X</button></div>)
+    }
+
+    onDelete(line) {
+	// await
+	return () => line.remove();
+    }
+}
+
+class Lines extends Component {
+    constructor(props) {
+	super(props);
+    }
+
+    render() {
+	if (this.props.lines && this.props.lines.length) {
+	    var i = 0;
+	    return this.props.lines.map((line) => {
+		return (
+			<div key={++i}>
+			<Line line={line}/>
+			</div>
+		)
+	    });
+	} else {
+	    return (<div>...</div>)
+	}
     }
 }
 
@@ -368,7 +411,6 @@ class TranslationLine extends Component {
 	    value={this.props.line.references} onChange={onChangeRefer}
 	    style={{width:'30em'}} placeholder="references" />
 		</div>
-
 	)
     }
 }
