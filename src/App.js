@@ -137,7 +137,7 @@ class App extends Component {
     handleWordsContent(wordsContent) {
 	this.setState({wordsContent: wordsContent});
     }
-    
+
     render() {
 	const ieLinks = this.state.ieLinks;
 	const ieLinksList = this.state.ieLinksList;
@@ -177,8 +177,15 @@ class App extends Component {
 		<div style={{display: (this.state.visibleTranslations
 					  ? 'inline' : 'none')}}>
 
-	    	<IETranslations 
-		/>
+	    	<IETranslations
+	    onSearchLine={(line) => {
+		console.log("182: " + line.id);
+		return () => {
+		    console.log("184: " + line.id);
+		    this.setState({ searchLine: line })
+		    console.log("186: " + this.state.searchLimit);
+		}
+	    }} />
 
 		</div>
 		<hr/>
@@ -198,8 +205,11 @@ class App extends Component {
 		<strong>Add Word</strong></a>		
 		<div style={{display: (this.state.visibleAddWord
 					  ? 'inline' : 'none')}}>
+
 	    	<LanguageWords onTest={this.handleWordLink}
-	    handleWordsContent={this.handleWordsContent} />
+	    handleWordsContent={this.handleWordsContent}
+	    searchLine={this.state.searchLine}/>
+
 		<hr/>
 		<table width="100%"><tbody><tr><td>
 		Limit:<br/><select>{limitOptions}</select>

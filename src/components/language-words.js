@@ -109,6 +109,7 @@ export class IETranslations extends Component {
 	this.handleChangeIEWords = this.handleChangeIEWords.bind(this);
 	this.handleChangeIEWork = this.handleChangeIEWork.bind(this);
 	this.handleChangeLineLocator = this.handleChangeLineLocator.bind(this);
+	this.onEditLine = this.onEditLine.bind(this);
 	// this.handleChangeLineTranslation = this.handleChangeLineTranslation.bind(this);
 	// this.onTest = this.onTest.bind(this);
     }
@@ -201,6 +202,18 @@ export class IETranslations extends Component {
 
     }
 
+    lineToState(line) {
+	return {
+	    value: line.ieLang,
+	    ieLang: line.ieLang,
+	    ieWords: line.ieWords,
+	    id: line.id,
+	    lineLocatorData: line.lineLocator.line, // TODO
+	    ieWork: line.lineLocator.work,
+	    timestamp: line.timestamp
+	}
+    }
+    
     emptyState() {
 	return {
 	    timestamp: '',
@@ -221,6 +234,14 @@ export class IETranslations extends Component {
 	doc.ieWords = this.state.ieWords;
 	doc.lineTranslations = this.state.lineTranslations;
 	doc.wordEtymonLemmas = [];
+    }
+
+    onEditLine(line) {
+	return () => {
+	    if (line && line.id) {
+		this.setState(this.lineToState(line));
+	    }
+	}
     }
     
     async upsertTranslation() { // addLineAndTranslations() {
@@ -289,7 +310,7 @@ export class IETranslations extends Component {
     }
     
     getSuggestionValue(suggestion) { return suggestion.val; }    
-    
+
     render() {
 	const { value, suggestions } = this.state;
 	// Autosuggest will pass through all these props to the input.
@@ -341,7 +362,8 @@ export class IETranslations extends Component {
 		</td></tr>
 		<tr><td colSpan="2">
 		<hr/>
-		<Lines lines={this.state.lines}/>
+		<Lines lines={this.state.lines} onEdit={this.onEditLine}
+	    onSearch={this.props.onSearchLine}/>
 		</td>
 		</tr></tbody></table>);
     }
@@ -354,9 +376,11 @@ class Line extends Component {
 
     render() {
 	const line = this.props.line;
-	const xit = this.onDelete(line);
-	return (<div>({line.ieLang}) {line.id}: {line.ieWords}
-		<button onClick={xit}>X</button></div>)
+	return (<div>({line.ieLang}) {line.id}
+		<button onClick={this.props.onEdit}>✎</button>
+		<button onClick={this.props.onSearch}>✇</button>
+		{line.ieWords}
+		<button onClick={() => line.remove()}>✖</button></div>)
     }
 
     onDelete(line) {
@@ -376,7 +400,9 @@ class Lines extends Component {
 	    return this.props.lines.map((line) => {
 		return (
 			<div key={++i}>
-			<Line line={line}/>
+			<Line line={line}
+		    onEdit={this.props.onEdit(line)}
+		    onSearch={this.props.onSearch(line)}/>
 			</div>
 		)
 	    });
@@ -443,11 +469,13 @@ export class LanguageWords extends Component {
 	// and an onChange handler that updates this value (see below).
 	// Suggestions also need to be provided to the Autosuggest,
 	// and they are initially empty because the Autosuggest is closed.
+	let newWords = '';
+	let newLang = '';
 	this.state = {
-	    value: '',
+	    value: newLang,
 	    suggestions: [],
-	    newWord: '',
-	    newLang: '',
+	    newWords: newWords,
+	    newLang: newLang,
 	    words: [],
 	};
 	this.wordsDBSub = new DBSubscription();
@@ -544,8 +572,17 @@ export class LanguageWords extends Component {
     render() {
 	const { value, suggestions } = this.state;
 	// Autosuggest will pass through all these props to the input.
+	let newWords = this.state.newWords;
+	let newLang = value;
+	if (this.props.searchLine) {
+	    // console.log(props.searchLine);
+	    newWords = this.props.searchLine.ieWords;
+	    newLang = this.props.searchLine.ieLang;
+	}
+
 	const inputProps = { placeholder: 'Type a language',
-			     value, onChange: this.handleChangeLang };
+			     value: newLang,
+			     onChange: this.handleChangeLang };
 	// Finally, render it!
 	const langIn = (
 		<Autosuggest suggestions={suggestions} inputProps={inputProps}
@@ -566,7 +603,7 @@ export class LanguageWords extends Component {
 		</td>
 		<td style={{verticalAlign:"top", textAlign:"left"}}>
 		<input type="text"
-	    value={this.state.newWords} onChange={onChangeWords}
+	    value={newWords} onChange={onChangeWords}
 	    style={{width:'30em'}} placeholder="words" />
 		<br/>
 		<button onClick={onClickAdd}>Add word</button>
