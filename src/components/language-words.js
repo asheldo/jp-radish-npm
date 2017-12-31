@@ -1,13 +1,9 @@
 import React, { Component } from 'react';
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.min.js';
 import Autosuggest from 'react-autosuggest';
-import * as RxDB from 'rxdb';
+
 import { pokornyWordsSchema, pokornyTranslationSchema } from '../schema';
 import { languagesValAndName } from '../pokorny-language';
-
-RxDB.plugin(require('pouchdb-adapter-idb'));
-RxDB.plugin(require('pouchdb-adapter-http'));
+import { DBSubscription } from '../db/rxdb-utils';
 
 // v. indogermanishes etymologisches worterbuch pokorny17112501
 const wordsDBName = 'pokornyx17121101';
@@ -15,82 +11,7 @@ const translationsDBName = 'ietranslations17122704';
 // indogermDbName = 'pokorny17112501';
 // piememoroots17102401 piekeys17102401
 
-const syncURL = 'http://192.168.0.6:5984/';
 const languages = languagesValAndName();
-
-class DBSubscription {
-    constructor() {
-	this.subscriptions = [];
-    }
-    
-    async createDatabase(dbName, collections, crown) {
-	// password must have at least 8 characters
-	const db = await RxDB.create(
-	    {name: dbName,
-	     adapter: 'idb',
-	     password: '12345678'}
-	);
-	console.dir(db);
-	// show who's the leader in page's title
-	db.waitForLeadership().then(() => {
-	    document.title = crown + document.title;
-	});
-	// create collection
-	//	collections.forEach(async ({name, schema}) => {
-	const name = collections[0].name;
-	const schema = collections[0].schema;
-	const collection = await db.collection({
-	    name: name,
-	    schema: schema
-	});
-	console.dir(collection);
-	// set up replication
-	await this.setupReplication(collection, dbName);
-//	});
-	return db;
-    }
-
-    // App is ready for multi-user behavior
-    setupReplication(collection, dbName) {
-	const replicationState = collection.sync({
-	    remote: syncURL + dbName + '/'
-	});
-	this.subscriptions.push(
-	    replicationState.change$.subscribe(
-		change => {
-		    toast('change');
-		    console.dir(change)
-		})
-	);
-	this.subscriptions.push(
-	    replicationState.docs$.subscribe(
-		docData => console.dir(docData))
-	);
-	this.subscriptions.push(
-	    replicationState.active$.subscribe(
-		active => toast(`active:${active}`))
-	);
-	this.subscriptions.push(
-	    replicationState.complete$.subscribe(
-		completed => toast(`completed:${completed}`))
-	);
-	this.subscriptions.push(
-	    replicationState.error$.subscribe(
-		error => {
-		    toast('Error');
-		    console.dir(error)
-		})
-	);
-    }
-
-    subscribe(sub) {
-	this.subscriptions.push(sub);
-    }
-    
-    unsubscribe() {
-	this.subscriptions.forEach(sub => sub.unsubscribe());
-    }
-}
 
 // New Add line translations with pokorny ie references
 // resources: ietranslations* db (export const pokornyLineTranslationSchema)
@@ -103,7 +24,8 @@ export class IETranslations extends Component {
 	// Suggestions also need to be provided to the Autosuggest,
 	// and they are initially empty because the Autosuggest is closed.
 	this.state = this.emptyState();
-	this.translationsDBSub = new DBSubscription();
+	const docsSubscribed = lines => this.setState({lines: lines});
+	this.translationsDBSub = new DBSubscription(docsSubscribed);
 	this.upsertTranslation = this.upsertTranslation.bind(this);
 	this.handleChangeIELang = this.handleChangeIELang.bind(this);
 	this.handleChangeIEWords = this.handleChangeIEWords.bind(this);
@@ -121,17 +43,6 @@ export class IETranslations extends Component {
 	    .createDatabase(translationsDBName,
 			    collections,
 			    '♔ ');
-	// Subscribe to query to get all documents
-	const sub = this.translationsDB.translations
-	      .find().sort({id: 1}).$.subscribe(
-		  (lines) => {
-		      if (!lines)
-			  return;
-		      toast('Reloading translations');
-		      this.setState({lines: lines}); //.reverse
-		      // this.handleTranslationsContent(lines);
-		  });
-	this.translationsDBSub.subscribe(sub);
     }
     
     componentWillUnmount() {
@@ -480,7 +391,8 @@ export class LanguageWords extends Component {
 	    newLang: newLang,
 	    words: [],
 	};
-	this.wordsDBSub = new DBSubscription();
+	const docsSubscribed = words => this.setState({words: words.reverse()});
+	this.wordsDBSub = new DBSubscription(docsSubscribed);
 	this.addWord = this.addWord.bind(this);
 	this.handleChangeLang = this.handleChangeLang.bind(this);
 	this.handleChangeWords = this.handleChangeWords.bind(this);
@@ -492,17 +404,6 @@ export class LanguageWords extends Component {
 	    .createDatabase(wordsDBName,
 			    [{name: 'words', schema: pokornyWordsSchema}],
 			    '♛ ');
-	// Subscribe to query to get all documents
-	const sub = this.wordsDB.words.find().sort({id: 1})
-	      .$.subscribe(
-		  words => {
-		      if (!words)
-			  return;
-		      toast('Reloading words');
-		      this.setState({words: words.reverse()});
-		      this.props.handleWordsContent(this.state.words);
-		  });
-	this.wordsDBSub.subscribe(sub);
     }
     
     componentWillUnmount() {
