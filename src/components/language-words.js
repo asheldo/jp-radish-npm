@@ -328,26 +328,29 @@ class Lines extends Component {
 class TranslationLine extends Component {
     constructor(props) {
 	super(props);
+	this.state = { transLang: this.props.line.transLang,
+		       transWords: this.props.line.transWords,
+		       references: this.props.line.references };
     }
 
     render() {
-	const onChangeLang = (event) =>
-	      this.props.line.transLang = event.target.value;
+	const onChangeLang = (event) => 
+	    this.setState({ transLang: event.target.value });
 	const onChangeWords = (event) =>
-	      this.props.line.transWords = event.target.value;
+	      this.setState({ transWords: event.target.value});
 	const onChangeRefer = (event) =>
-	      this.props.line.references = event.target.value;
+	      this.setState({ references: event.target.value});
 	return (
 		<div>
 	    	<input type="text"
-	    value={this.props.line.transLang} onChange={onChangeLang}
+	    value={this.state.transLang} onChange={onChangeLang}
 	    style={{width:'10em'}} placeholder="lang" />
 	    	<input type="text"
-	    value={this.props.line.transWords} onChange={onChangeWords}
+	    value={this.state.transWords} onChange={onChangeWords}
 	    style={{width:'30em'}} placeholder="translation" />
 		<br/>
 	    	<input type="text"
-	    value={this.props.line.references} onChange={onChangeRefer}
+	    value={this.state.references} onChange={onChangeRefer}
 	    style={{width:'30em'}} placeholder="references" />
 		</div>
 	)
