@@ -176,14 +176,9 @@ class App extends Component {
 		<strong>Translations</strong></a>
 		<div style={{display: (this.state.visibleTranslations
 					  ? 'inline' : 'none')}}>
-
 	    	<IETranslations
 	    onSearchLine={(line) => {
-		console.log("182: " + line.id);
-		return () => {
-		    console.log("184: " + line.id);
-		    this.setState({ searchLine: line })
-		}
+		return () => { this.setState({ searchLine: line }) }
 	    }} />
 
 		</div>

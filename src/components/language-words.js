@@ -344,7 +344,7 @@ class TranslationLine extends Component {
 		<div>
 	    	<input type="text"
 	    value={this.state.transLang} onChange={onChangeLang}
-	    style={{width:'10em'}} placeholder="lang" />
+	    style={{width:'10em'}} placeholder="ie lang" />
 	    	<input type="text"
 	    value={this.state.transWords} onChange={onChangeWords}
 	    style={{width:'30em'}} placeholder="translation" />
@@ -415,10 +415,8 @@ export class LanguageWords extends Component {
     }
 
     componentWillReceiveProps(nextProps) {
-	if (this.props.searchLine
-	    && nextProps.searchLine
-	    && this.props.searchLine.id !==
-	    nextProps.searchLine.id)
+	if (!this.props.searchLine || (nextProps.searchLine
+		 && this.props.searchLine.id !== nextProps.searchLine.id))
 	{
 	    this.setState({newWords: nextProps.searchLine.ieWords});
 	}
