@@ -203,14 +203,16 @@ export class IETranslations extends Component {
     }
 
     lineToState(line) {
+	console.log("206: " + line.lineLocator.line);
 	return {
 	    value: line.ieLang,
 	    ieLang: line.ieLang,
 	    ieWords: line.ieWords,
 	    id: line.id,
-	    lineLocatorData: line.lineLocator.line, // TODO
+	    lineLocatorData: "" + line.lineLocator.line, // TODO
 	    ieWork: line.lineLocator.work,
-	    timestamp: line.timestamp
+	    timestamp: line.timestamp,
+	    lineTranslations: line.lineTranslations
 	}
     }
     
@@ -508,6 +510,16 @@ export class LanguageWords extends Component {
 	this.wordsDBSub.unsubscribe();
     }
 
+    componentWillReceiveProps(nextProps) {
+	if (this.props.searchLine
+	    && nextProps.searchLine
+	    && this.props.searchLine.id !==
+	    nextProps.searchLine.id)
+	{
+	    this.setState({newWords: nextProps.searchLine.ieWords});
+	}
+    }
+    
     // handlers
     
     handleChangeLang = (event, { newValue }) => {
@@ -518,7 +530,7 @@ export class LanguageWords extends Component {
     handleChangeWords(event) {
 	this.setState({newWords: event.target.value});
     }
-
+    
     async addWord() {
 	const id = Date.now().toString();
 	const newWord = {
@@ -574,10 +586,15 @@ export class LanguageWords extends Component {
 	// Autosuggest will pass through all these props to the input.
 	let newWords = this.state.newWords;
 	let newLang = value;
+	let newWordsDefault = '';
 	if (this.props.searchLine) {
-	    // console.log(props.searchLine);
-	    newWords = this.props.searchLine.ieWords;
-	    newLang = this.props.searchLine.ieLang;
+	    console.log("578: " + this.state.searchLineId);
+	    // if (this.props.searchLine.id !== this.state.searchLineId)
+	    {
+		// console.log(props.searchLine);
+//		newWordsDefault = this.props.searchLine.ieWords + "";
+		// newLang = this.props.searchLine.ieLang + "";
+	    }
 	}
 
 	const inputProps = { placeholder: 'Type a language',

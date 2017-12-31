@@ -183,7 +183,6 @@ class App extends Component {
 		return () => {
 		    console.log("184: " + line.id);
 		    this.setState({ searchLine: line })
-		    console.log("186: " + this.state.searchLimit);
 		}
 	    }} />
 
