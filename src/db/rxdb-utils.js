@@ -47,6 +47,7 @@ export class DBSubscription {
 	      .find().sort({id: 1}).$.subscribe(
 		  (docs) => // (lines) =>
 		  {
+		      toast('need ' + name);
 		      if (!docs)
 			  return;
 		      toast('Reloading ' + name); // translations');

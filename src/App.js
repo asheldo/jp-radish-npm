@@ -198,7 +198,7 @@ class App extends Component {
 		<a href='' onClick={this.showAddWordDiv}>
 		<strong>Add Word</strong></a>		
 		<div style={{display: (this.state.visibleAddWord
-					  ? 'inline' : 'none')}}>
+					  ? 'block' : 'none')}}>
 
 	    	<LanguageWords onTest={this.handleWordLink}
 	    handleWordsContent={this.handleWordsContent}
@@ -211,7 +211,7 @@ class App extends Component {
 		<a href='' onClick={this.showWordsListDiv}>
 		<strong>Words List</strong></a>		
 		<div style={{display: (this.state.visibleWordsList
-					  ? 'inline' : 'none')}}>
+					  ? 'block' : 'none')}}>
 		<WordsList words={wordsContent} onClickWord={onClickWord} />
 		</div>
 		</td>
@@ -230,22 +230,26 @@ class App extends Component {
     showAllRootsDiv(event) {
 	event.preventDefault();
 	this.setState({visibleAllRoots: !this.state.visibleAllRoots});
+	return false;
     }
     
     showAddWordDiv(event) {
 	event.preventDefault();
 	this.setState({visibleAddWord: !this.state.visibleAddWord});
+	return false;
     }	
     
     showWordsListDiv(event) {
 	event.preventDefault();
 	this.setState({visibleWordsList: !this.state.visibleWordsList});
+	return false;
     }
     
     showTranslationsDiv(event) {
 	event.preventDefault();
 	this.setState(
 	    {visibleTranslations: !this.state.visibleTranslations});
+	return false;
     }
         
     handleChangeLink(map) {

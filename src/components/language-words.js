@@ -297,7 +297,7 @@ class Lines extends Component {
 		const work = (old) ? '' : line.lineLocator.work;
 		lastWork = line.lineLocator.work;
 		const row =
-		      (<div style={{display: visibility(lastWork)}}>
+		      (<div key={++i} style={{display: visibility(lastWork)}}>
 		       &nbsp;{line.lineLocator.line}&nbsp;
 		       <button onClick={this.props.onEdit(line)}>✎</button>
 		       <button onClick={this.props.onSearch(line)}>✇</button>
@@ -309,7 +309,7 @@ class Lines extends Component {
 		if (work === '') {
 		    return row;
 		} else {
-		    return (<div><div>
+		    return (<div key={++i}><div>
 			    <a href='' onClick={this.showLinesDiv(lastWork)}>
 			    <strong>({line.ieLang})&nbsp;
 			    {line.lineLocator.work}</strong>
@@ -416,7 +416,10 @@ export class LanguageWords extends Component {
 	    newLang: newLang,
 	    words: [],
 	};
-	const docsSubscribed = words => this.setState({words: words.reverse()});
+	const docsSubscribed = words => {
+	    this.setState({words: words.reverse()});
+	    this.props.handleWordsContent(this.state.words);
+	}
 	this.wordsDBSub = new DBSubscription(docsSubscribed);
 	this.addWord = this.addWord.bind(this);
 	this.handleChangeLang = this.handleChangeLang.bind(this);
@@ -437,8 +440,9 @@ export class LanguageWords extends Component {
     }
 
     componentWillReceiveProps(nextProps) {
-	if (!this.props.searchLine || (nextProps.searchLine
-		 && this.props.searchLine.id !== nextProps.searchLine.id))
+	if (nextProps.searchLine
+	    && (!this.props.searchLine
+		|| (this.props.searchLine.id !== nextProps.searchLine.id)))
 	{
 	    this.setState({newWords: nextProps.searchLine.ieWords});
 	}
