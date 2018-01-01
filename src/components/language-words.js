@@ -49,6 +49,33 @@ export class IETranslations extends Component {
 	// Unsubscribe from all subscriptions
 	this.translationsDBSub.unsubscribe();
     }
+    
+    lineToState(line) {
+	return {
+	    value: line.ieLang,
+	    ieLang: line.ieLang,
+	    ieWords: line.ieWords,
+	    id: line.id,
+	    lineLocatorData: "" + line.lineLocator.line, // TODO
+	    ieWork: line.lineLocator.work,
+	    timestamp: line.timestamp,
+	    lineTranslations: line.lineTranslations
+	}
+    }
+    
+    emptyState() {
+	return {
+	    timestamp: '',
+	    value: '',
+	    suggestions: [],
+	    ieWork: '',
+	    ieLang: '',
+	    ieWords: '',
+	    lineLocatorData: '',
+	    lineTranslations: [],
+	    wordEtymonLemmas: [],
+	};
+    }
 
     handleChangeIELang = (event, { newValue }) => {
 	this.setState({ value: newValue });
@@ -110,35 +137,6 @@ export class IETranslations extends Component {
     }
 
     handleTranslationsContent(translation) {
-
-    }
-
-    lineToState(line) {
-	console.log("206: " + line.lineLocator.line);
-	return {
-	    value: line.ieLang,
-	    ieLang: line.ieLang,
-	    ieWords: line.ieWords,
-	    id: line.id,
-	    lineLocatorData: "" + line.lineLocator.line, // TODO
-	    ieWork: line.lineLocator.work,
-	    timestamp: line.timestamp,
-	    lineTranslations: line.lineTranslations
-	}
-    }
-    
-    emptyState() {
-	return {
-	    timestamp: '',
-	    value: '',
-	    suggestions: [],
-	    ieWork: '',
-	    ieLang: '',
-	    ieWords: '',
-	    lineLocatorData: '',
-	    lineTranslations: [],
-	    wordEtymonLemmas: []
-	};
     }
 
     updateDoc(doc) {
@@ -150,11 +148,9 @@ export class IETranslations extends Component {
     }
 
     onEditLine(line) {
-	return () => {
-	    if (line && line.id) {
-		this.setState(this.lineToState(line));
-	    }
-	}
+	return () => { if (line && line.id) {
+	    this.setState(this.lineToState(line));
+	}}
     }
     
     async upsertTranslation() { // addLineAndTranslations() {
@@ -171,9 +167,7 @@ export class IETranslations extends Component {
 	};	
 	const collection = this.translationsDB.translations;
 	var doc = null;
-	// try {
-	const docs = await collection.find().where('id').equals(id).exec(); // findOne({id: newTranslation.id})
-	//} catch (err) { console.log(err); }
+	const docs = await collection.find().where('id').equals(id).exec();
 	docs.forEach((rowDoc) => {
 	    doc = rowDoc;
 	});
@@ -282,45 +276,73 @@ export class IETranslations extends Component {
     }
 }
 
-class Line extends Component {
-    constructor(props) {
-	super(props);
-    }
-
-    render() {
-	const line = this.props.line;
-	return (<div>({line.ieLang}) {line.id}
-		<button onClick={this.props.onEdit}>✎</button>
-		<button onClick={this.props.onSearch}>✇</button>
-		{line.ieWords}
-		<button onClick={() => line.remove()}>✖</button></div>)
-    }
-
-    onDelete(line) {
-	// await
-	return () => line.remove();
-    }
-}
-
 class Lines extends Component {
     constructor(props) {
 	super(props);
+	this.state = { visibleLines: {} };
+	this.showLinesDiv = this.showLinesDiv.bind(this);
     }
 
     render() {
 	if (this.props.lines && this.props.lines.length) {
+	    const visibility = (lastWork) => {
+		const vis = this.state.visibleLines[lastWork];
+		return vis == null || vis ? 'block' : 'none';
+	    }
+	    this.props.lines.sort(this.lineSorter);
 	    var i = 0;
-	    return this.props.lines.map((line) => {
-		return (
-			<div key={++i}>
-			<Line line={line}
-		    onEdit={this.props.onEdit(line)}
-		    onSearch={this.props.onSearch(line)}/>
-			</div>
-		)
+	    let lastWork = '';
+	    const rows = this.props.lines.map((line) => {
+		const old = line.lineLocator.work === lastWork;
+		const work = (old) ? '' : line.lineLocator.work;
+		lastWork = line.lineLocator.work;
+		const row =
+		      (<div style={{display: visibility(lastWork)}}>
+		       &nbsp;{line.lineLocator.line}&nbsp;
+		       <button onClick={this.props.onEdit(line)}>✎</button>
+		       <button onClick={this.props.onSearch(line)}>✇</button>
+		       {line.ieWords}
+		       <button onClick={() => {
+			   this.props.onEdit(line);
+			   line.remove();
+		       }}>✖</button></div>)
+		if (work === '') {
+		    return row;
+		} else {
+		    return (<div><div>
+			    <a href='' onClick={this.showLinesDiv(lastWork)}>
+			    <strong>({line.ieLang})&nbsp;
+			    {line.lineLocator.work}</strong>
+			    </a></div> {row} </div>);
+		}
 	    });
+	    return rows;
 	} else {
 	    return (<div>...</div>)
+	}
+    }
+
+    showLinesDiv(lastWork) {
+	return (event) => {
+	    event.preventDefault();
+	    const vis = this.state.visibleLines;
+	    const isvis = vis[lastWork];
+	    vis[lastWork] = isvis == null ? false : !isvis;
+	    this.setState({visibleLines: vis});
+	    return false;
+	}
+    }
+
+    lineSorter(a,b) {
+	const locA = a.lineLocator, locB = b.lineLocator;
+	const xA = locA.work.trim() + "" + (100000 + locA.line);
+	const xB = locB.work.trim() + "" + (100000 + locB.line);
+	if (xA < xB) {
+	    return -1;
+	} else if (xA === xB) {
+	    return 0;
+	} else {
+	    return 1;
 	}
     }
 }
