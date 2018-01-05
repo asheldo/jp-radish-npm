@@ -6,147 +6,61 @@ import * as roots from './pokorny-roots';
 import * as rootParser from './pokorny-root-parser';
 import * as rootSearch from './pokorny-root-search';
 
-import { LanguageWords, IETranslations } from './components/language-words';
+import { LanguageWord } from './components/language-words';
+import { IETranslations } from './components/translation-lines';
+import { Links, LinksList } from './components/root-links-list';
+import { WordsList } from './components/root-words-list';
 
 import {QueryChangeDetector} from 'rxdb';
 
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.min.js';
-import * as moment from 'moment';
 
 QueryChangeDetector.enable();
 QueryChangeDetector.enableDebugging();
 
 // Simple render components
 
-class Links extends Component {
-    
-    render() {
-	const map = this.props.wordsAndLinks;
-	if (map == null) {
-	    return (<div
-		    className="App-root-table-scroll"
-		    dangerouslySetInnerHTML={{__html: '<pre>...</pre>'}} />);
-
-	} else {
-	    var contents = (<div>...</div>);
-	    map.forEach((contentVal, ieWordsKey, map) => {
-		const id = ieWordsKey;
-		const parts = contentVal.split(":");
-		const engl = parts[2];
-		const last = parts[parts.length-1];		
-		contents = (
-			<div key={id}
-		    className="App-root-table-scroll"
-		    dangerouslySetInnerHTML={{__html: contentVal}} />);
-		return;
-   	    });			
-	    return contents; // (<div>{areas}</div>);
-	}
-    }
-}
-
-class LinksList extends Component {
-    render() {
-	const map = this.props.wordsAndLinksList;
-	if (map == null) {
-	    return (<select></select>);
-	} else {
-	    const onChange = this.props.onChange(map);
-	    const options = [];
-	    // options[0] = (<option key="0" value=""></option>);
-	    map.forEach((contentVal, ieWordsKey, map) => {
-		options[options.length] =
-		    (<option key={options.length} value={ieWordsKey}>
-		     {options.length+1}: {ieWordsKey}
-		     </option>)
-	    });
-	    return (<select onChange={onChange}>{options}</select>);
-	}
-    }
-}
-
-
-class WordsList extends Component {
-    render() {
-	const wordProcess = this.props.onClickWord;
-	const words = this.props.words;
-	return words == null ? [] : words.map(
-	    ({id, ieLang, ieWords}) => {
-		const wordProcessOne = wordProcess(ieWords);
-		return (<Word key={id} id={id}
-			ieLang={ieLang} ieWords={ieWords}
-			onClickWord={wordProcessOne} />)
-	    });
-    }
-}
-
-class Word extends Component {
-    render() {
-	const date = moment(this.props.id, 'x').fromNow();
-	return (
-		<div key={this.props.id}>
-		<p>
-		<a href='' onClick={this.props.onClickWord}>&lt;&lt;</a>
-		({this.props.ieLang})&nbsp;
-		<span>{this.props.ieWords} ... {date}</span>
-		</p>
-		</div>
-	);	    
-    }
-}
-    
-
 class App extends Component {
 
     constructor(props) {
 	super(props);
+	
+	const visible = {};
+	visible["allRoots"] = false;
+	visible["addWord"] = true;
+	visible["wordsList"] = false;
+	visible["translations"] = true;
+	visible["rootLinks"] = false;
 	this.state = {
-	    visibleAllRoots: false,
-	    visibleAddWord: true,
-	    visibleWordsList: true,
-	    visibleTranslations: true,
+	    visible: visible,
 	    searchLimit: 2,
 	    ieLinks: new Map(),
 	    ieLinksList: new Map()
 	};
 	this.handleChangeLink = this.handleChangeLink.bind(this);
-	this.handleWordProcessor = this.handleWordProcessor.bind(this);
-	this.handleWordLink = this.handleWordLink.bind(this);
-	this.handleWordsContent = this.handleWordsContent.bind(this);
-	this.showAllRootsDiv = this.showAllRootsDiv.bind(this);
-	this.showAddWordDiv = this.showAddWordDiv.bind(this);
-	this.showWordsListDiv = this.showWordsListDiv.bind(this);
-	this.showTranslationsDiv = this.showTranslationsDiv.bind(this);
+	this.handleFetchRoots = this.handleFetchRoots.bind(this);
+	this.fetchPokornyRoots = this.fetchPokornyRoots.bind(this);
+	this.showDiv = this.showDiv.bind(this);
     }
-
-    async indogermDatabase() {
+    
+    async componentDidMount() {
+	// indogermDatabase
 	roots.syncAndConnect()
 	    .then((info) => this.rootDatabaseConnected = 1)
 	    .catch((err) => console.log(err));
     }
-    
-    
-    async componentDidMount() {
-	this.indogermDatabase();
-    }
 
     componentWillUnmount() {
-    }
-
-    handleWordsContent(wordsContent) {
-	this.setState({wordsContent: wordsContent});
     }
 
     render() {
 	const ieLinks = this.state.ieLinks;
 	const ieLinksList = this.state.ieLinksList;
 	const wordsContent = this.state.wordsContent;
-	const onClickWord = this.handleWordProcessor;
+	const onClickWord = this.handleFetchRoots;
 	const onChangeLink = this.handleChangeLink;
 	const showHide = this.handleShowHideContent;
-	const limitOptions = [1,2,3,4,5].map(
-	    (i) => (<option key={i} value={i}>{i}</option>));
 	return (
 		<div className="App">
 		
@@ -157,62 +71,58 @@ class App extends Component {
 		</div>
 		
 	        <table width="100%"><tbody><tr>
-		<td width="50%">
-	        <table width="100%"><tbody>
-		<tr>
-		<td></td>
-		<td><h3>PIE Root</h3></td>
-		<td><LinksList wordsAndLinksList={ieLinksList}
-	    onChange={onChangeLink}/></td>		
-		</tr>
-		<tr>
-		<td colSpan="3">
+		<td style={{verticalAlign: 'top'}} width="50%">
+	        <table width="100%"><tbody><tr><td>
+		<a href='' onClick={this.showDiv("rootLinks")}>
+		<h3>PIE Root</h3></a></td>
+		<td>
+		<LinksList wordsAndLinksList={ieLinksList}
+	    onChange={onChangeLink}/></td></tr>
+		<tr style={{display: (this.state.visible["rootLinks"]
+				      ? 'inline' : 'none')}}>
+		<td style={{verticalAlign: 'top'}} colSpan="3">
 		<Links wordsAndLinks={ieLinks} />
 		</td></tr></tbody></table>
 		</td>
 	    	<td width="50%" style={{verticalAlign:'top'}}>
 		<div className="translations">
-		<a href='' onClick={this.showTranslationsDiv}>
+		<a href='' onClick={this.showDiv("translations")}>
 		<strong>Translations</strong></a>
-		<div style={{display: (this.state.visibleTranslations
+		<div style={{display: (this.state.visible["translations"]
 					  ? 'inline' : 'none')}}>
-	    	<IETranslations
-	    onSearchLine={(line) => {
-		return () => { this.setState({ searchLine: line }) }
-	    }} />
-
-		</div>
-		<hr/>
-		</div>
-		
+	    	<IETranslations onSearchLine={(line) => {
+		    return () => { this.setState({ searchLine: line }) }
+		}} />
+		</div><hr/></div>		
 		<div className="all-roots">
-		<a href='' onClick={this.showAllRootsDiv}>
+		<a href='' onClick={this.showDiv("allRoots")}>
 		<strong>All Roots</strong></a>
-		<div style={{display: (this.state.visibleAllRoots
+		<div style={{display: (this.state.visible["allRoots"]
 					  ? 'inline' : 'none')}}>
 		...
-		</div>
-		<hr/>
-		</div>
+		</div><hr/></div>
 		<div className="add-word-div">
-		<a href='' onClick={this.showAddWordDiv}>
+		<a href='' onClick={this.showDiv("addWord")}>
 		<strong>Add Word</strong></a>		
-		<div style={{display: (this.state.visibleAddWord
+		<div style={{display: (this.state.visible["addWord"]
 					  ? 'block' : 'none')}}>
-
-	    	<LanguageWords onTest={this.handleWordLink}
-	    handleWordsContent={this.handleWordsContent}
+	    	<LanguageWord onTest={this.fetchPokornyRoots}
+	    handleWordsContent={ wc => this.setState({wordsContent: wc})}
 	    searchLine={this.state.searchLine}/>
 
 		<hr/>
-		<table width="100%"><tbody><tr><td>
-		Limit:<br/><select>{limitOptions}</select>
+		<table width="100%"><tbody><tr>
+		<td style={{verticalAlign: 'top'}}>
+		Limit:<br/>
+		<select value='3'>{ [1,2,3,4,5,6,7,8,9,10].map(
+		    (i) => (<option key={i} value={i}>{i}</option>)) }</select>
 		</td><td>
-		<a href='' onClick={this.showWordsListDiv}>
+		<a href='' onClick={this.showDiv("wordsList")}>
 		<strong>Words List</strong></a>		
-		<div style={{display: (this.state.visibleWordsList
+		<div style={{display: (this.state.visible["wordsList"]
 					  ? 'block' : 'none')}}>
-		<WordsList words={wordsContent} onClickWord={onClickWord} />
+		<WordsList words={wordsContent}
+	    onClickWord={onClickWord} />
 		</div>
 		</td>
 		</tr></tbody></table>
@@ -227,29 +137,13 @@ class App extends Component {
 	);
     }
 
-    showAllRootsDiv(event) {
-	event.preventDefault();
-	this.setState({visibleAllRoots: !this.state.visibleAllRoots});
-	return false;
-    }
-    
-    showAddWordDiv(event) {
-	event.preventDefault();
-	this.setState({visibleAddWord: !this.state.visibleAddWord});
-	return false;
-    }	
-    
-    showWordsListDiv(event) {
-	event.preventDefault();
-	this.setState({visibleWordsList: !this.state.visibleWordsList});
-	return false;
-    }
-    
-    showTranslationsDiv(event) {
-	event.preventDefault();
-	this.setState(
-	    {visibleTranslations: !this.state.visibleTranslations});
-	return false;
+    showDiv(div) {
+	return (event) => {
+	    event.preventDefault();
+	    this.state.visible[div] = !this.state.visible[div];;
+	    this.setState({ visible: this.state.visible });
+	    return false;
+	}
     }
         
     handleChangeLink(map) {
@@ -258,17 +152,12 @@ class App extends Component {
 	    const key = event.target.value;
 	    const content = map.get(key);
 	    oneMap.set(key, content);
-	    this.setState({ieLinks: oneMap});
+	    this.setState({ieLinks: oneMap,
+			   visibleRootLinks: true});
 	}
     }
     
-    // like handleWordProcessor(ieWords);
-    handleWordLink(ieWords) {
-	//	event.preventDefault();
-	this.fetchPokornyRoots(ieWords);
-    }    
-
-    handleWordProcessor(ieWords) {
+    handleFetchRoots(ieWords) {
 	return (event) => {
 	    event.preventDefault();
 	    this.fetchPokornyRoots(ieWords);
@@ -338,7 +227,6 @@ class App extends Component {
 	const results = [[rootId, content]];
 	return results;
     }
-
     
     async searchRoots(words) {
 	const db = roots.database();

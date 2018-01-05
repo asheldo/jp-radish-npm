@@ -76,8 +76,6 @@ export function listGroupRoots(groupSelect) {
 
 // Process rows...
 function handleRows(results) {
-    console.log(results);
-    // rootsAndGroups =
     rootsGroup.handleRows(results);
 }
 
@@ -112,7 +110,6 @@ function from(db, dbName) {
 }
 
 function sync2(info) {
-    console.log("2:" + info);
     return from(pKeywordsDb, nameKeywordsDb)
 	.then(sync3)
     // Fast-forward, to setSessions()/connect(), if p inaccessible
@@ -120,7 +117,6 @@ function sync2(info) {
 }
 
 function sync3(info) {
-    console.log("3:" + info);
     langs();
     return to(pMemoRootsDb,  nameMemoRootsDb)
 	.then(sync4)
@@ -128,14 +124,12 @@ function sync3(info) {
 }
 
 function sync4(info) {
-    console.log("4:" + info);
     return from(pMemoRootsDb,  nameMemoRootsDb)
 	.then(syncRoots)
 	.catch(syncRoots);
 }
 
 function syncRoots(info) {
-    console.log("5:" + info);
     syncDom('syncing roots data..');	
     return to(pDatabase, nameDatabase)
 	.then( syncRoots2)
@@ -143,16 +137,13 @@ function syncRoots(info) {
 }
 
 function syncRoots2(info) {
-    console.log("6:" + info);
-    // setSessions(); // setup typeahead
-    // langs();
     return from(pDatabase, nameDatabase)
 	.then((info) => {
-	    syncDom('sync done - building...');
+	    syncDom('sync done - building');
 	    connect();
 	})
 	.catch((err) => {
-	    syncDom('sync failed - building...');
+	    syncDom('sync failed - building');
 	    connect();
 	});
 }
