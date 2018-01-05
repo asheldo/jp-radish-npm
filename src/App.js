@@ -27,12 +27,14 @@ class App extends Component {
 	super(props);
 	
 	const visible = {};
+	visible["rootLinks"] = true;
+	visible["translations"] = false;
 	visible["allRoots"] = false;
 	visible["addWord"] = true;
-	visible["wordsList"] = false;
-	visible["translations"] = true;
-	visible["rootLinks"] = false;
+	visible["wordsList"] = true;
 	this.state = {
+	    editWord: {},
+	    fetchInProgress: "",
 	    visible: visible,
 	    searchLimit: 2,
 	    ieLinks: new Map(),
@@ -73,16 +75,29 @@ class App extends Component {
 	        <table width="100%"><tbody><tr>
 		<td style={{verticalAlign: 'top'}} width="50%">
 	        <table width="100%"><tbody><tr><td>
-		<a href='' onClick={this.showDiv("rootLinks")}>
-		<h3>PIE Root</h3></a></td>
-		<td>
+		<table  width="100%"><tbody><tr>
+		<td style={{align: 'center'}} width="50%">
+		<a href='' onClick={this.showDiv("rootLinks")}>		
+		<h3>PIE Root</h3></a>
+		</td>
+		<td style={{align: 'center'}} width="50%">
+	    {this.state.fetchInProgress}		
 		<LinksList wordsAndLinksList={ieLinksList}
-	    onChange={onChangeLink}/></td></tr>
+	    onChange={onChangeLink}/>  <em>Limit:</em>
+		    <select value='3'>{
+			[1,2,3,4,5,6,7,8,9,10]
+			    .map((i) =>
+				 (<option key={i} value={i}>{i}</option>))
+		    }</select>
+		
+		</td></tr></tbody></table>
+	    </td></tr>
 		<tr style={{display: (this.state.visible["rootLinks"]
 				      ? 'inline' : 'none')}}>
-		<td style={{verticalAlign: 'top'}} colSpan="3">
+		<td style={{verticalAlign: 'top'}} >
 		<Links wordsAndLinks={ieLinks} />
-		</td></tr></tbody></table>
+		</td></tr></tbody>
+		</table>
 		</td>
 	    	<td width="50%" style={{verticalAlign:'top'}}>
 		<div className="translations">
@@ -106,22 +121,24 @@ class App extends Component {
 		<strong>Add Word</strong></a>		
 		<div style={{display: (this.state.visible["addWord"]
 					  ? 'block' : 'none')}}>
-	    	<LanguageWord onTest={this.fetchPokornyRoots}
-	    handleWordsContent={ wc => this.setState({wordsContent: wc})}
+	    	<LanguageWord
+	    onTest={(arg) => {
+		this.fetchPokornyRoots(arg);
+	    }}
+	    handleWordsContent={ wc => this.setState({wordsContent: wc}) }
+	    editWord={this.state.editWord}
 	    searchLine={this.state.searchLine}/>
-
 		<hr/>
-		<table width="100%"><tbody><tr>
-		<td style={{verticalAlign: 'top'}}>
-		Limit:<br/>
-		<select value='3'>{ [1,2,3,4,5,6,7,8,9,10].map(
-		    (i) => (<option key={i} value={i}>{i}</option>)) }</select>
-		</td><td>
+		<table width="100%"><tbody><tr><td>
 		<a href='' onClick={this.showDiv("wordsList")}>
 		<strong>Words List</strong></a>		
 		<div style={{display: (this.state.visible["wordsList"]
 					  ? 'block' : 'none')}}>
 		<WordsList words={wordsContent}
+	    onEditWord={
+		// todo => todo
+		(word) => (event) => this.setState({editWord: word})
+	    }
 	    onClickWord={onClickWord} />
 		</div>
 		</td>
@@ -136,7 +153,7 @@ class App extends Component {
 		</div>
 	);
     }
-
+    
     showDiv(div) {
 	return (event) => {
 	    event.preventDefault();
@@ -165,6 +182,14 @@ class App extends Component {
     }
 
     fetchPokornyRoots(ieWords) {
+	let ct = 0;
+	const showFetchSpinner = () => {
+	    const spinner = "◐◓◑◒";
+	    ++ct;
+	    const show = spinner.charAt(ct % 3);
+	    this.setState({ fetchInProgress: show });
+	}
+	showFetchSpinner();
 	const wordDefinitions = ieWords.split(";");
 	var allwords = [];
 	wordDefinitions.forEach((wordDef) => {
@@ -174,13 +199,15 @@ class App extends Component {
 	const rootSetResolves = allwords.map(async ([wordDef, token]) => {
 	    var rootSet = [];
 	    try {
-		// console.log("352: " + token);
 		rootSet = await this.fetchRoot(token);
+		showFetchSpinner();
 	    } catch (err) {
 		try {
+		    showFetchSpinner();
 		    rootSet = await this.fetchRoot(token + "*");
 		} catch (err) {
 		    try {
+			showFetchSpinner();
 			rootSet = await this.searchRoots(wordDef);
 		    } catch (err) {
 			console.log("nothing found");
@@ -190,12 +217,11 @@ class App extends Component {
 	    return rootSet;
 	});
 	this.setRootContent(ieWords, rootSetResolves);
-	console.log("354: " + rootSetResolves.length);
     }
 
     setRootContent(ieWords, rootSetResolves) {
 	Promise.all(rootSetResolves).then((rootSets) => {
-	    // console.log(results);
+	    // 
 	    const mapOne = new Map();
 	    const mapMore = new Map();
 	    rootSets.forEach((rootSet) => {
@@ -203,7 +229,6 @@ class App extends Component {
 		    console.log(rootSet.length);
 		    rootSet.forEach((root) => {
 			if (root && root.length) {
-			    console.log(root[0]);
 			    const rootId = root[0];
 			    const content = root[1];
 			    mapMore.set(rootId, content);
@@ -216,16 +241,14 @@ class App extends Component {
 		}
 	    });
 	    this.setState({ieLinksList: mapMore});
+	    this.setState({fetchInProgress: ""});
 	});
     }
     
-    async fetchRoot(proposed) {
-	let rootId = proposed;
-	const remoteDatabase = roots.database();
-	const result = await remoteDatabase.get(rootId);
+    async fetchRoot(rootId) {
+	const result = await roots.database().get(rootId);
 	const content = rootParser.parseContent(result.content);
-	const results = [[rootId, content]];
-	return results;
+	return [[rootId, content]];
     }
     
     async searchRoots(words) {
@@ -244,3 +267,29 @@ class App extends Component {
 }
 
 export default App;
+
+class Spinner extends Component {
+    render() {
+	// var duration = 600,  element,
+	// frames = '▙▛▜▟'.split('');
+	//frames = '▤▧▥▨'.split('');
+	//frames = '◴◵◶◷'.split('');
+	//frames = '◩◪'.split('');
+	//frames = '◰◱◲◳'.split('');
+	//frames = '◐◓◑◒'.split('');
+	const step = function (timestamp) {
+	    // var frame = Math.floor(timestamp*frames.length/duration) % frames.length;
+	    // if (!element) element = window.document.getElementById('spinner');	    
+	    // element.innerHTML = frames[frame];
+	    // return window.requestAnimationFrame(step);
+	}
+	// window.requestAnimationFrame(step);
+	if (this.props.fetchInProgress) {
+	    return (<span>◐◓◑◒</span>);
+	} else {
+	    return (<span></span>);
+	}
+    }
+
+}
+

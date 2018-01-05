@@ -17,10 +17,13 @@ export function index(db) {
 export async function search(db, ieWords, limit) {
     //    return null;
     const words = ieWords.split("=");
-    const root = words[0], definition = words[words.length ? 1 : 0];
-    console.log(root.substring(0,1) + " " + definition);
-    const matcher = new RegExp(// "\/" +
-	root.substring(0,1));
+    const root = words[0],
+	  definition = words[words.length ? 1 : 0],
+	  firstRoot = root.split(" ")[0];
+    console.log(firstRoot + " " + definition);
+    const matcher = new RegExp(firstRoot);
+	// "\/" +
+	// root.substring(0,1));
     var i = 0;
     const result = await db.search({
 	query: definition,
@@ -28,7 +31,7 @@ export async function search(db, ieWords, limit) {
 	limit: limit,
 	filter: function (doc) {
 	    const start = parseInt(doc.pageStart);
-	    const incl = matcher.test(doc._id) || start < 25; 
+	    const incl = matcher.test(doc._id) || doc._id.includes(firstRoot); 
 	    return incl;
 	},
 	highlighting: true

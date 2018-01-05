@@ -22,7 +22,7 @@ export class LanguageWord extends Component {
 	// and they are initially empty because the Autosuggest is closed.
 	let newWords = '';
 	let newLang = '';
-	this.state = {
+	this.state = {	    
 	    value: newLang,
 	    suggestions: [],
 	    newWords: newWords,
@@ -52,12 +52,21 @@ export class LanguageWord extends Component {
 	this.wordsDBSub.unsubscribe();
     }
 
-    componentWillReceiveProps(nextProps) {
-	if (nextProps.searchLine
+    componentWillReceiveProps(newProps) {
+	if (newProps.searchLine
 	    && (!this.props.searchLine
-		|| (this.props.searchLine.id !== nextProps.searchLine.id)))
+		|| (this.props.searchLine.id !== newProps.searchLine.id)))
 	{
-	    this.setState({newWords: nextProps.searchLine.ieWords});
+	    this.setState({newWords: newProps.searchLine.ieWords});
+	}
+	else if (newProps.editWord && newProps.editWord.id
+		&& newProps.editWord.id !== this.state.id) {
+	    const word = newProps.editWord;
+	    this.setState({value: word.ieLang,
+			   newLang: word.ieLang,
+			   newWords: word.ieWords,
+			   id: word.id
+			  });
 	}
     }
     
@@ -121,11 +130,9 @@ export class LanguageWord extends Component {
     }
     getSuggestionValue(suggestion) { return suggestion.val; }
     
-    render() {
-	const { value, suggestions } = this.state;
+    render() {	
+	const { value, suggestions, newWords } = this.state;
 	// Autosuggest will pass through all these props to the input.
-	let newWords = this.state.newWords;
-	let newLang = value;
 	let newWordsDefault = '';
 	if (this.props.searchLine) {
 	    // if (this.props.searchLine.id !== this.state.searchLineId)
@@ -135,7 +142,7 @@ export class LanguageWord extends Component {
 	    }
 	}
 	const inputProps = { placeholder: 'Type a language',
-			     value: newLang,
+			     value: value,
 			     onChange: this.handleChangeLang };
 	// Finally, render it!
 	const langIn = (
@@ -147,7 +154,7 @@ export class LanguageWord extends Component {
 		/>
 	);
 	const onChangeWords = this.handleChangeWords;
-	const wordsContent = this.state.words;
+	// const wordsContent = this.state.words;
 	const onClickAdd = this.addWord;
 	const onClickTest = this.onTest;
 	return (
@@ -157,7 +164,8 @@ export class LanguageWord extends Component {
 		</td>
 		<td style={{verticalAlign:"top", textAlign:"left"}}>
 		<input type="text"
-	    value={newWords} onChange={onChangeWords}
+	    value={newWords}
+	    onChange={onChangeWords}
 	    style={{width:'30em'}} placeholder="words" />
 		<br/>
 		<button onClick={onClickAdd}>Add word</button>

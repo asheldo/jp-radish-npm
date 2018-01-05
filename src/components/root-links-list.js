@@ -42,7 +42,8 @@ export class LinksList extends Component {
 		     {options.length+1}: {ieWordsKey}
 		     </option>)
 	    });
-	    return (<select onChange={onChange}>{options}</select>);
+	    const ct = options.length ? "" + options.length + ": " : "";
+	    return (<span>{ct}<select onChange={onChange}>{options}</select></span>);
 	}
     }
 }
