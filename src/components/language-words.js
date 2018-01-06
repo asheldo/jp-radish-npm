@@ -166,7 +166,7 @@ export class LanguageWord extends Component {
 		<input type="text"
 	    value={newWords}
 	    onChange={onChangeWords}
-	    style={{width:'30em'}} placeholder="words" />
+	    style={{width:'30em'}} placeholder="/root/=word" />
 		<br/>
 		<button onClick={onClickAdd}>Add word</button>
 		<button onClick={onClickTest}>&gt;&gt; Test</button>

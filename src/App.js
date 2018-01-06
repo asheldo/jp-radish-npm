@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
-import logo from './logo.svg';
+
 import './App.css';
+import { header } from './page-elements';
 // for pokorny roots db
 import * as roots from './pokorny-roots';
 import * as rootParser from './pokorny-root-parser';
@@ -62,23 +63,19 @@ class App extends Component {
 	const wordsContent = this.state.wordsContent;
 	const onClickWord = this.handleFetchRoots;
 	const onChangeLink = this.handleChangeLink;
-	const showHide = this.handleShowHideContent;
+	const showHideLabel = (div) => this.state.visible[div] ? "Hide" : "Show"
+	const legacyApp = "http://192.168.0.6:3001";
 	return (
-		<div className="App">
-		
+		<div className="App">		
 		<ToastContainer autoClose={3000} />
-		<div className="App-header">
-		<img src={logo} className="App-logo" alt="logo" />
-		<h2>JPokornyX</h2>
-		</div>
-		
+		{header}
 	        <table width="100%"><tbody><tr>
 		<td style={{verticalAlign: 'top'}} width="50%">
 	        <table width="100%"><tbody><tr><td>
 		<table  width="100%"><tbody><tr>
 		<td style={{align: 'center'}} width="50%">
 		<a href='' onClick={this.showDiv("rootLinks")}>		
-		<h3>PIE Root</h3></a>
+		<h3>{showHideLabel("rootLinks")} PIE Root</h3></a>
 		</td>
 		<td style={{align: 'center'}} width="50%">
 	    {this.state.fetchInProgress}		
@@ -102,23 +99,25 @@ class App extends Component {
 	    	<td width="50%" style={{verticalAlign:'top'}}>
 		<div className="translations">
 		<a href='' onClick={this.showDiv("translations")}>
-		<strong>Translations</strong></a>
+		<strong>{showHideLabel("translations")} Translations</strong></a>
 		<div style={{display: (this.state.visible["translations"]
 					  ? 'inline' : 'none')}}>
 	    	<IETranslations onSearchLine={(line) => {
 		    return () => { this.setState({ searchLine: line }) }
 		}} />
 		</div><hr/></div>		
-		<div className="all-roots">
+		<div>
 		<a href='' onClick={this.showDiv("allRoots")}>
-		<strong>All Roots</strong></a>
+		<strong>{showHideLabel("allRoots")} All Roots</strong></a></div>
 		<div style={{display: (this.state.visible["allRoots"]
 					  ? 'inline' : 'none')}}>
-		...
-		</div><hr/></div>
+		<em>...TBA...
+		Use <a href={legacyApp} target="legacy">legacy app</a> to
+	    browse all roots</em>
+		</div><hr/>
 		<div className="add-word-div">
 		<a href='' onClick={this.showDiv("addWord")}>
-		<strong>Add Word</strong></a>		
+		<strong>{showHideLabel("addWord")} My Word(s)</strong></a>		
 		<div style={{display: (this.state.visible["addWord"]
 					  ? 'block' : 'none')}}>
 	    	<LanguageWord
@@ -162,7 +161,7 @@ class App extends Component {
 	    return false;
 	}
     }
-        
+
     handleChangeLink(map) {
 	return (event) => {
 	    const oneMap = new Map();
