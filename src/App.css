@@ -9,8 +9,13 @@
 
 .App-header {
   background-color: #222;
-  height: 70px;
-  padding: 20px;
+  padding: 10px;
+  color: white;
+}
+
+.App-header-table {
+  background-color: #222;
+  padding: 10px;
   color: white;
 }
 

@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 
 import './App.css';
-import { header } from './page-elements';
+import { Header, allRootsLink } from './page-elements';
 // for pokorny roots db
 import * as roots from './pokorny-roots';
 import * as rootParser from './pokorny-root-parser';
@@ -64,12 +64,13 @@ class App extends Component {
 	const onClickWord = this.handleFetchRoots;
 	const onChangeLink = this.handleChangeLink;
 	const showHideLabel = (div) => this.state.visible[div] ? "Hide" : "Show"
-	const legacyApp = "http://192.168.0.6:3001";
 	return (
 		<div className="App">		
 		<ToastContainer autoClose={3000} />
-		{header}
-	        <table width="100%"><tbody><tr>
+	        <table width="100%"><tbody><tr><td colSpan="2">
+		<Header/>
+		</td></tr>
+		<tr>
 		<td style={{verticalAlign: 'top'}} width="50%">
 	        <table width="100%"><tbody><tr><td>
 		<table  width="100%"><tbody><tr>
@@ -112,7 +113,7 @@ class App extends Component {
 		<div style={{display: (this.state.visible["allRoots"]
 					  ? 'inline' : 'none')}}>
 		<em>...TBA...
-		Use <a href={legacyApp} target="legacy">legacy app</a> to
+		Use <a href={allRootsLink} target="legacy">legacy app</a> to
 	    browse all roots</em>
 		</div><hr/>
 		<div className="add-word-div">
