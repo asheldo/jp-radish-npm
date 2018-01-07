@@ -50,7 +50,11 @@ class App extends Component {
     async componentDidMount() {
 	// indogermDatabase
 	roots.syncAndConnect()
-	    .then((info) => this.rootDatabaseConnected = 1)
+	    .then((info) => {
+		this.setState({rootDatabaseConnected: true});
+		console.log("indexing roots");
+		rootSearch.index(roots.database());
+	    })
 	    .catch((err) => console.log(err));
     }
 

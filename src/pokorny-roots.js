@@ -1,5 +1,6 @@
 // pokorny-roots
 import * as rootsGroup from './pokorny-roots-group';
+import {syncURL} from './db/rxdb-utils';
 
 var PouchDB = require('pouchdb-browser');
 // PouchDB.plugin(require('pouchdb-adapter-idb'));
@@ -9,11 +10,9 @@ const nameDatabase = 'pokorny17112501',
       nameMemoRootsDb = 'piememoroots17102401';
 
 // const syncURL = 'localhost';
-
-const host = "192.168.0.6";
-const uriDatabases = // (host) =>
-      `http://${host}:5984/`;
-// 
+// const host = "192.168.0.6";
+// const uriDatabases = `http://${host}:5984/`;
+ 
 var pDatabase, pKeywordsDb, pMemoRootsDb;
 
 export function database() {
@@ -101,12 +100,12 @@ function connect() {
 
 function to(db, dbName) {
     var opts = {live: true};
-    return db.replicate.to(uriDatabases + dbName);
+    return db.replicate.to(syncURL + dbName);
 }
 
 function from(db, dbName) {
     var opts = {live: true};
-    return db.replicate.from(uriDatabases + dbName);
+    return db.replicate.from(syncURL + dbName);
 }
 
 function sync2(info) {

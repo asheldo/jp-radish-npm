@@ -6,7 +6,7 @@ export function index(db) {
 	fields: ['content'],
 	build: true
     }).then(function (info) {
-	console.log("index");
+	console.log("indexed " + info);
 	// if build was successful, info is {"ok": true}
     }).catch(function (err) {
 	// handle error
@@ -21,21 +21,33 @@ export async function search(db, ieWords, limit) {
 	  definition = words[words.length ? 1 : 0],
 	  firstRoot = root.split(" ")[0];
     console.log(firstRoot + " " + definition);
-    const matcher = new RegExp(firstRoot);
-	// "\/" +
-	// root.substring(0,1));
-    var i = 0;
-    const result = await db.search({
-	query: definition,
-	fields: ['content'],
-	limit: limit,
-	filter: function (doc) {
-	    const start = parseInt(doc.pageStart);
-	    const incl = matcher.test(doc._id) || doc._id.includes(firstRoot); 
-	    return incl;
-	},
-	highlighting: true
-    });
+    var result;
+    if (firstRoot.charAt(0) === "/") {
+	const matcher = new RegExp(firstRoot);
+	result = await db.search({
+	    query: definition,
+	    fields: ['content'],
+	    limit: limit,
+	    filter: function (doc) {
+		const start = parseInt(doc.pageStart);
+		const incl = matcher.test(doc._id) || doc._id.includes(firstRoot); 
+		return incl;
+	    }, 
+	    highlighting: true
+	});
+    } else {
+	result = await db.search({
+	    query: definition,
+	    fields: ['content'],
+	    limit: limit,
+	    /*	filter: function (doc) {
+		const start = parseInt(doc.pageStart);
+		const incl = matcher.test(doc._id) || doc._id.includes(firstRoot); 
+		return incl;
+		}, */
+	    highlighting: true
+	});
+    }
     console.log(result ? result.rows.length : 0);
     if (result && result.rows && result.rows.length > 0) {
 	console.log(result.rows.length);
