@@ -5,7 +5,8 @@ import 'react-toastify/dist/ReactToastify.min.js';
 RxDB.plugin(require('pouchdb-adapter-idb'));
 RxDB.plugin(require('pouchdb-adapter-http'));
 
-const syncURL = 'http://192.168.0.6:5984/';
+// const syncURL = 'http://192.168.0.6:5984/';
+const syncURL = 'http://162.243.24.217:5984/';
 
 export class DBSubscription {
     constructor(docsSubCallback) {
