@@ -28,16 +28,16 @@ export class Header extends Component {
     }
     
     render() {
-	const textFirst = (<span>Page, like many before it,
-			   based on the legendary
-			   and very long "IEW":
-			   <em>Indogermanisches Etymologisches Wörterbuch</em>
-			   </span>)
-	const textRest = (<span>(Julius Pokorny. Francke, 1959).
-			  Running on top of the shoulders of giants;
-			  text scan and
-			  English meanings by George Starostin,
-			  further corrections by A. Lubotsky, et al.</span>);
+	const textFirst
+	      = (<span>Page, like many before it,
+		 based on the legendary and very long
+		 <em>Indogermanisches Etymologisches Wörterbuch (IEW)</em>
+		 </span>)
+	const textRest
+	      = (<span>(Julius Pokorny. Francke, 1959).
+		 Running on the shoulders of Indo-European linguistic giants;
+		 text scan and English meanings by George Starostin,
+		 further corrections by A. Lubotsky, et al.</span>);
 	const text = (<span>{textFirst} {textRest}</span>);
 	const onClick = (event) => {
 	    event.preventDefault();

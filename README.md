@@ -1,11 +1,39 @@
 #jp-radish-npm
 
-This project was bootstrapped with [Create React App](https://github.com/facebookincubator/create-react-app).
+## Who? What?? Why???
+
+Julius Pokorny was a 20th-c. Hungarian historical linguist, an expert on Indo-European ("Indo-Germanische" in deutsche) languages, and _the_ expert on Old Irish apparently.
+
+His mid-20th century published reference works of reconstructed Indo-European root words were an authoritative summation of more than a century of effort by all linguists. His has been supplanted by some more up-to-date works since, is lacking lots of Hittite material etc., but it is awesome.
+
+There are multiple electronic public domain versions of Pokorny's thousand-page Indo-Germanische Etymologische Worterbuch (IEW) on the web, but none that are quite satisfying for hunting down roots as a paper copy would be.
+
+## Tech
+
+### CouchDB
+
+A single-page version of the IEW was parsed into 2000+ individual records in a json document, one record per lemma or word root, with page number, root (e.g. /abhro*/), and content fields. These were loaded into a CouchDB document database. A dump of that is found in another, jp-radish repo.
+
+### PouchDB
+
+The earlier jp-radish repo has a non-React app that presents something of a 
+
+## Screenshots
+
+![wordhus-3001_victory](https://user-images.githubusercontent.com/1759117/35420005-5f70c89c-01f8-11e8-8b1c-47d2a8755af8.png)
+
+## Frameworks
+
+### Progressive offline-first supported by PouchDB in browser / CouchDB on server.
+
+### This REACT project was bootstrapped with [Create React App](https://github.com/facebookincubator/create-react-app).
 
 Below you will find some information on how to perform common tasks.<br>
 You can find the most recent version of this guide [here](https://github.com/facebookincubator/create-react-app/blob/master/packages/react-scripts/template/README.md).
 
-## Table of Contents
+## Framework Guidance
+
+### Table of Contents
 
 - [Updating to New Releases](#updating-to-new-releases)
 - [Sending Feedback](#sending-feedback)
