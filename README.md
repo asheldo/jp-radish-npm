@@ -8,6 +8,8 @@ His mid-20th century published reference works of reconstructed Indo-European ro
 
 There are multiple electronic public domain versions of Pokorny's thousand-page Indo-Germanische Etymologische Worterbuch (IEW) on the web, but none that are quite satisfying for hunting down roots as a paper copy would be.
 
+This experimental app let's me enter "root=related-word" pairs and try to link to Pokorny roots, or add Indo-European language lines of prose etc., along with attempts to translate, and again try to link to Pokorny roots. I have another WiPunder jp-radish, for basic browsing of Pokorny roots, that simply indexes and sorts all the Pokorny roots for different methods of browsing. 
+
 ## Tech
 
 ### CouchDB
