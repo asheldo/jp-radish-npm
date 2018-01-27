@@ -8,7 +8,7 @@ His mid-20th century published reference works of reconstructed Indo-European ro
 
 There are multiple electronic public domain versions of Pokorny's thousand-page Indo-Germanische Etymologische Worterbuch (IEW) on the web, but none that are quite satisfying for hunting down roots as a paper copy would be.
 
-This experimental app let's me enter "root=related-word" pairs and try to link to Pokorny roots, or add Indo-European language lines of prose etc., along with attempts to translate, and again try to link to Pokorny roots. I have another WiPunder jp-radish, for basic browsing of Pokorny roots, that simply indexes and sorts all the Pokorny roots for different methods of browsing. 
+This experimental app let's me enter "root=related-word" pairs and try to link to Pokorny roots, or add Indo-European language lines of prose etc., along with attempts to translate, and again try to link to Pokorny roots. I have another WiPunder jp-radish, for basic browsing of Pokorny roots, that simply indexes all the Pokorny roots for different methods of browsing. 
 
 ## Tech
 
@@ -18,7 +18,11 @@ A single-page version of the IEW was parsed into 2000+ individual records in a j
 
 ### PouchDB
 
-The earlier jp-radish repo has a non-React app that presents something of a 
+Everything I work on outside of work these days is exploring progressive, offline-first approaches to web apps. 
+
+### React
+
+Of course.
 
 ## Screenshots
 
