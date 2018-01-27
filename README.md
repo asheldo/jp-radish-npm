@@ -2,9 +2,9 @@
 
 ## Who? What?? Why???
 
-Hwaet, Julius Pokorny was a 20th-c. Hungarian historical linguist, an expert on Indo-European ("Indo-Germanische" in deutsche) languages, and _the_ expert on Old Irish apparently.
+Hwæt :p Julius Pokorny was a 20th-c. Hungarian historical linguist, an expert on Indo-European ("Indo-Germanische" in deutsche) languages, and apparently _the_ expert on Old Irish.
 
-His mid-20th century published reference works of reconstructed Indo-European root words were an authoritative summation of more than a century of effort by all linguists. His has been supplanted by some more up-to-date works since, is lacking lots of Hittite material etc., but it is awesome.
+Pokorny's mid-20th c. published reference works of reconstructed Indo-European root words were an authoritative summation of more than a century of effort by all linguists. Although supplanted by more current works since, and lacking lots of Hittite material etc., Pokorny's work is awesome.
 
 There are multiple electronic public domain versions of Pokorny's thousand-page Indo-Germanische Etymologische Worterbuch (IEW) on the web, but none that are quite satisfying for hunting down roots as a paper copy would be.
 
