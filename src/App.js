@@ -161,8 +161,9 @@ class App extends Component {
     showDiv(div) {
 	return (event) => {
 	    event.preventDefault();
-	    this.state.visible[div] = !this.state.visible[div];;
-	    this.setState({ visible: this.state.visible });
+	    const vis = this.state.visible;
+	    vis[div] = !vis[div]; // this.state.visible[div];;
+	    this.setState({ visible: vis });
 	    return false;
 	}
     }

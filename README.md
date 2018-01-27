@@ -18,28 +18,24 @@ A single-page version of the IEW was parsed into 2000+ individual records in a j
 
 ### PouchDB
 
-Everything I work on outside of work these days is exploring progressive, offline-first approaches to web apps. 
+A key tool/ecosystem for exploring progressive, offline-first approaches to web apps. 
 
 ### React
 
-Of course.
+Of course -- see framework provided details below
 
-## Screenshots
+## PokornyX Screenshot
 
 ![wordhus-3001_victory](https://user-images.githubusercontent.com/1759117/35420005-5f70c89c-01f8-11e8-8b1c-47d2a8755af8.png)
 
-## Frameworks
-
-### Progressive offline-first supported by PouchDB in browser / CouchDB on server.
+## React Frameworks Details
 
 ### This REACT project was bootstrapped with [Create React App](https://github.com/facebookincubator/create-react-app).
 
 Below you will find some information on how to perform common tasks.<br>
 You can find the most recent version of this guide [here](https://github.com/facebookincubator/create-react-app/blob/master/packages/react-scripts/template/README.md).
 
-## Framework Guidance
-
-### Table of Contents
+### Create React App - Table of Contents
 
 - [Updating to New Releases](#updating-to-new-releases)
 - [Sending Feedback](#sending-feedback)
