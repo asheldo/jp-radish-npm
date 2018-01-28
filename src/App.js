@@ -29,7 +29,7 @@ class App extends Component {
 	
 	const visible = {};
 	visible["rootLinks"] = true;
-	visible["translations"] = false;
+	visible["translations"] = true;
 	visible["allRoots"] = false;
 	visible["addWord"] = true;
 	visible["wordsList"] = true;
@@ -52,8 +52,9 @@ class App extends Component {
 	roots.syncAndConnect()
 	    .then((info) => {
 		this.setState({rootDatabaseConnected: true});
-		console.log("indexing roots");
-		rootSearch.index(roots.database());
+		console.log("NOT indexing roots");
+		// TODO Why is indexing using up Firefox CPU?
+		// rootSearch.index(roots.database());
 	    })
 	    .catch((err) => console.log(err));
     }

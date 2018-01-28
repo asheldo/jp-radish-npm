@@ -50,13 +50,16 @@ export class IETranslations extends Component {
     }
     
     lineToState(line) {
+	const loc = line.lineLocator;
+	const b = loc.book, c = loc.chapter, v = loc.chapter, l = loc.line;
+	const lineLocatorData = loc.book ? b +','+ c +','+ v +','+ l : '' + l;
 	return {
 	    value: line.ieLang,
 	    ieLang: line.ieLang,
 	    ieWords: line.ieWords,
 	    id: line.id,
-	    lineLocatorData: "" + line.lineLocator.line, // TODO
-	    ieWork: line.lineLocator.work,
+	    lineLocatorData: lineLocatorData, // .line, // TODO
+	    ieWork: loc.work,
 	    timestamp: line.timestamp,
 	    lineTranslations: line.lineTranslations
 	}
@@ -122,9 +125,11 @@ export class IETranslations extends Component {
 	const value = this.state.lineLocatorData; // event.target.value;
 	const locators = value.split(",");
 	if (locators.length === 1 && locators[0].trim() !== '') {
-	    lineLocator = { line: parseInt(locators[0], 10) };
+	    lineLocator = { chapter: 0, verse: 0,
+			    line: parseInt(locators[0], 10) };
 	} else if (locators.length === 2) {
-	    lineLocator = { verse: parseInt(locators[0], 10),
+	    lineLocator = { chapter: 0,
+			    verse: parseInt(locators[0], 10),
 			    line: parseInt(locators[1], 10) };
 	} else if (locators.length === 3) {
 	    lineLocator = { chapter: parseInt(locators[0], 10),
@@ -262,7 +267,7 @@ export class IETranslations extends Component {
 	    placeholder="line words" />
 		<input type="text" value={this.state.lineLocatorData}
 	    onChange={onChangeLocator} style={{width:'30em'}}
-	    placeholder="locator (line #)" />
+	    placeholder='locator (line # or "book,chap#,verse#,line#")' />
 		<br/>
 		<button onClick={onClickAdd}>Add/Update Trans.</button>
 		<button onClick={onClickClear}>—— Clear</button>
@@ -293,7 +298,7 @@ class LinesList extends Component {
 	if (this.props.lines && this.props.lines.length) {
 	    const visibility = (lastWork) => {
 		const vis = this.state.visibleLines[lastWork];
-		return vis == null || vis ? 'block' : 'none';
+		return vis == null || !vis ? 'none' : 'block';
 	    }
 	    this.props.lines.sort(this.lineSorter);
 	    var i = 0;
@@ -310,9 +315,12 @@ class LinesList extends Component {
 		const verse = (oldVerse) ? '' : loc.verse;
 		lastWork = loc.work;
 		lastBook = loc.book;
+		const locData = (book > '')
+		      ? (<span>{book} {chap}:{verse}({loc.line})</span>)
+		      : loc.line;
 		const row =
 		      (<div key={++i} style={{display: visibility(lastWork)}}>
-		       <em>{book} {chap} {verse}&nbsp;{loc.line}</em>&nbsp;
+		       <em>{locData}</em>&nbsp;
 		       <button onClick={this.props.onEdit(line)}>✎</button>
 		       <button onClick={this.props.onSearch(line)}>✇</button>
 		       {line.ieWords}
@@ -340,7 +348,7 @@ class LinesList extends Component {
 	    event.preventDefault();
 	    const vis = this.state.visibleLines;
 	    const isvis = vis[lastWork];
-	    vis[lastWork] = isvis == null ? false : !isvis;
+	    vis[lastWork] = isvis == null ? true : !isvis;
 	    this.setState({visibleLines: vis});
 	    return false;
 	}
@@ -348,8 +356,9 @@ class LinesList extends Component {
 
     lineSorter(a,b) {
 	const sortable = (loc) => 
-	    loc.work.trim() + (loc.book ? loc.book : '0')
-	      + (1000+loc.chapter) + (1000+loc.verse) + (10000+loc.line);
+	    loc.work.trim() + (loc.book ? loc.book : '0') + ''
+	      + (1000+loc.chapter) + '' + (1000+loc.verse) + ''
+	      + (10000+loc.line);
 	const xA = sortable(a.lineLocator), xB = sortable(b.lineLocator);
 	if (xA < xB) {
 	    return -1;
