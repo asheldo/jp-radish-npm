@@ -37,7 +37,9 @@ export class Header extends Component {
 	      = (<span>(Julius Pokorny. Francke, 1959).
 		 Running on the shoulders of Indo-European linguistic giants;
 		 text scan and English meanings by George Starostin,
-		 further corrections by A. Lubotsky, et al.</span>);
+		 further corrections by A. Lubotsky, et al.<br/>
+		 <a href='https://en.wiktionary.org/wiki/radish'><em>Radish</em>
+		 etymology</a> (i.e. Latin accus. sing. of <em>radix</em></span>);
 	const text = (<span>{textFirst} {textRest}</span>);
 	const onClick = (event) => {
 	    event.preventDefault();
