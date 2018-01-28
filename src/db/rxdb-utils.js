@@ -5,7 +5,11 @@ import 'react-toastify/dist/ReactToastify.min.js';
 RxDB.plugin(require('pouchdb-adapter-idb'));
 RxDB.plugin(require('pouchdb-adapter-http'));
 
-export const syncURL = 'http://192.168.0.6:5984/';
+console.log("domain: " + process.env.REACT_APP_COUCHDB_DOMAIN);
+
+const url = (process.env.NODE_ENV === 'production') ? 'wordhus.org' : '192.168.0.16';
+
+export const syncURL = `http://${url}:5984/`;
 // export const syncURL = 'http://162.243.24.217:5984/';
 // const uriDatabases = `http://${host}:5984/`;
 
