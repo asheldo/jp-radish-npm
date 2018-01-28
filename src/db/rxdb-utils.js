@@ -5,13 +5,15 @@ import 'react-toastify/dist/ReactToastify.min.js';
 RxDB.plugin(require('pouchdb-adapter-idb'));
 RxDB.plugin(require('pouchdb-adapter-http'));
 
-console.log("domain: " + process.env.REACT_APP_COUCHDB_DOMAIN);
+const domain = process.env.REACT_APP_COUCHDB_DOMAIN;
+const port = process.env.REACT_APP_COUCHDB_PORT;
+export const syncURL = `http://${domain}:${port}/`;
 
-const url = (process.env.NODE_ENV === 'production') ? 'wordhus.org' : '192.168.0.16';
+const translationDbPassword = process.env.REACT_APP_TRANS_DB_PASSWORD;
 
-export const syncURL = `http://${url}:5984/`;
+// const url = (process.env.NODE_ENV === 'production')
+//    ? 'wordhus.org' : '192.168.0.16';
 // export const syncURL = 'http://162.243.24.217:5984/';
-// const uriDatabases = `http://${host}:5984/`;
 
 export class DBSubscription {
     constructor(docsSubCallback) {
@@ -24,7 +26,7 @@ export class DBSubscription {
 	const db = await RxDB.create(
 	    {name: dbName,
 	     adapter: 'idb',
-	     password: '12345678'}
+	     password: translationDbPassword}
 	);
 	console.dir(db);
 	// show who's the leader in page's title
