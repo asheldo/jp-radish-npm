@@ -32,7 +32,7 @@ class App extends Component {
 	visible["translations"] = true;
 	visible["allRoots"] = false;
 	visible["addWord"] = true;
-	visible["wordsList"] = true;
+	visible["wordsList"] = false;
 	this.state = {
 	    editWord: {},
 	    fetchInProgress: "",
@@ -69,40 +69,42 @@ class App extends Component {
 	const onClickWord = this.handleFetchRoots;
 	const onChangeLink = this.handleChangeLink;
 	const showHideLabel = (div) => this.state.visible[div] ? "Hide" : "Show"
+	// tbl tr
+	//  <table width="100%"><tbody><tr><td colSpan="2">
+	// tr1
+	// 		</td></tr><tr>
+	// td1
+	// 	<td style={{verticalAlign: 'top'}} width="50%">
+	
 	return (
 		<div className="App">		
 		<ToastContainer autoClose={3000} />
-	        <table width="100%"><tbody><tr><td colSpan="2">
+
 		<Header/>
-		</td></tr>
-		<tr>
-		<td style={{verticalAlign: 'top'}} width="50%">
-	        <table width="100%"><tbody><tr><td>
-		<table  width="100%"><tbody><tr>
-		<td style={{align: 'center'}} width="50%">
+
+		
+		<div style={{verticalAlign: 'top', width: (this.state.visible["rootLinks"]
+				     ? '50%' : '20%'), display: 'inline-block'}}>
+
 		<a href='' onClick={this.showDiv("rootLinks")}>		
 		<h3>{showHideLabel("rootLinks")} PIE Root</h3></a>
-		</td>
-		<td style={{align: 'center'}} width="50%">
-	    {this.state.fetchInProgress}		
+		{this.state.fetchInProgress}		
 		<LinksList wordsAndLinksList={ieLinksList}
 	    onChange={onChangeLink}/>  <em>Limit:</em>
-		    <select value='3'>{
-			[1,2,3,4,5,6,7,8,9,10]
-			    .map((i) =>
-				 (<option key={i} value={i}>{i}</option>))
-		    }</select>
+		<select value='3'>{
+		    [1,2,3,4,5,6,7,8,9,10]
+			.map((i) => (<option key={i} value={i}>{i}</option>))
+		}</select>
 		
-		</td></tr></tbody></table>
-	    </td></tr>
-		<tr style={{display: (this.state.visible["rootLinks"]
-				      ? 'inline' : 'none')}}>
-		<td style={{verticalAlign: 'top'}} >
+		<div style={{display: (this.state.visible["rootLinks"]
+				       ? 'inline' : 'none')}}>
 		<Links wordsAndLinks={ieLinks} />
-		</td></tr></tbody>
-		</table>
-		</td>
-	    	<td width="50%" style={{verticalAlign:'top'}}>
+		</div>
+		</div>
+
+	    	<div style={{width: (this.state.visible["rootLinks"]
+				     ? '50%' : '80%'),  display: 'inline-block'}}>
+		
 		<div className="translations">
 		<a href='' onClick={this.showDiv("translations")}>
 		<strong>{showHideLabel("translations")} Translations</strong></a>
@@ -134,7 +136,7 @@ class App extends Component {
 	    editWord={this.state.editWord}
 	    searchLine={this.state.searchLine}/>
 		<hr/>
-		<table width="100%"><tbody><tr><td>
+		
 		<a href='' onClick={this.showDiv("wordsList")}>
 		<strong>Words List</strong></a>		
 		<div style={{display: (this.state.visible["wordsList"]
@@ -146,15 +148,13 @@ class App extends Component {
 	    }
 	    onClickWord={onClickWord} />
 		</div>
-		</td>
-		</tr></tbody></table>
+		
 		<hr/>
 		</div>
 		</div>    
-		</td>
-		</tr></tbody></table>
 		
 		<hr/>
+		</div>
 		</div>
 	);
     }
