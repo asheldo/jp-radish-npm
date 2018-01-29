@@ -28,12 +28,12 @@ function initData() {
     pMemoRootsDb = new PouchDB(`${nameMemoRootsDb}`);    
 }
 
-export function syncAndConnect() {
+export function syncAndConnect(completion) {
     initData();
     syncDomAttribute('data-sync-state', 'syncing-data');
     return to(pKeywordsDb,   nameKeywordsDb)
-	.then(sync2)
-	.catch(sync2);
+	.then(sync2(completion))
+	.catch(sync2(completion));
 }
 
 /*
@@ -74,8 +74,10 @@ export function listGroupRoots(groupSelect) {
 }
 
 // Process rows...
-function handleRows(results) {
+const handleRows = (completion) => (results) => {
     rootsGroup.handleRows(results);
+    console.log("completion");
+    completion();
 }
 
 function langs() {
@@ -85,7 +87,7 @@ function langs() {
 /**
  * after sync, failure or success
  */
-function connect() {
+function connect(completion) {
     pDatabase.info()
 	.then(function (info) {
 	    console.log(info);
@@ -94,7 +96,7 @@ function connect() {
 	include_docs: true, // true,
 	attachments: false // true
     })
-	.then(handleRows)
+	.then(handleRows(completion))
 	.catch(err => console.log(err));
 }
 
@@ -108,42 +110,42 @@ function from(db, dbName) {
     return db.replicate.from(syncURL + dbName);
 }
 
-function sync2(info) {
+const sync2 = (completion) => (info) => {
     return from(pKeywordsDb, nameKeywordsDb)
-	.then(sync3)
+	.then(sync3(completion))
     // Fast-forward, to setSessions()/connect(), if p inaccessible
-	.catch(syncRoots2);
+	.catch(syncRoots2(completion));
 }
 
-function sync3(info) {
+const sync3 = (completion) => (info) => {
     langs();
     return to(pMemoRootsDb,  nameMemoRootsDb)
-	.then(sync4)
-	.catch(sync4);
+	.then(sync4(completion))
+	.catch(sync4(completion));
 }
 
-function sync4(info) {
+const sync4 = (completion) => (info) => {
     return from(pMemoRootsDb,  nameMemoRootsDb)
-	.then(syncRoots)
-	.catch(syncRoots);
+	.then(syncRoots(completion))
+	.catch(syncRoots(completion));
 }
 
-function syncRoots(info) {
+const syncRoots = (completion) => (info) => {
     syncDom('syncing roots data..');	
     return to(pDatabase, nameDatabase)
-	.then( syncRoots2)
-	.catch( syncRoots2);
+	.then( syncRoots2(completion))
+	.catch( syncRoots2(completion));
 }
 
-function syncRoots2(info) {
+const syncRoots2 = (completion) => (info) => {
     return from(pDatabase, nameDatabase)
 	.then((info) => {
 	    syncDom('sync done - building');
-	    connect();
+	    connect(completion);
 	})
 	.catch((err) => {
 	    syncDom('sync failed - building');
-	    connect();
+	    connect(completion);
 	});
 }
 
