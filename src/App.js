@@ -6,7 +6,7 @@ import { Header, allRootsLink } from './page-elements';
 import * as roots from './pokorny-roots';
 import * as rootParser from './pokorny-root-parser';
 import * as rootSearch from './pokorny-root-search';
-
+import { AllRoots } from './components/all-roots';
 import { LanguageWord } from './components/language-words';
 import { IETranslations } from './components/translation-lines';
 import { Links, LinksList } from './components/root-links-list';
@@ -14,8 +14,12 @@ import { WordsList } from './components/root-words-list';
 
 import {QueryChangeDetector} from 'rxdb';
 
-import { ToastContainer } from 'react-toastify';
+import { ToastContainer, style } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.min.js';
+
+style({
+    width: "120px",
+});
 
 QueryChangeDetector.enable();
 QueryChangeDetector.enableDebugging();
@@ -33,6 +37,7 @@ class App extends Component {
 	visible["addWord"] = true;
 	visible["wordsList"] = false;
 	this.state = {
+	    allRootsOptions: [],
 	    editWord: {},
 	    fetchInProgress: "",
 	    visible: visible,
@@ -40,6 +45,7 @@ class App extends Component {
 	    ieLinks: new Map(),
 	    ieLinksList: new Map()
 	};
+	this.handleChangeAllRoots = this.handleChangeAllRoots.bind(this);
 	this.handleChangeLink = this.handleChangeLink.bind(this);
 	this.handleFetchRoots = this.handleFetchRoots.bind(this);
 	this.fetchPokornyRoots = this.fetchPokornyRoots.bind(this);
@@ -48,7 +54,13 @@ class App extends Component {
     
     async componentDidMount() {
 	// indogermDatabase
-	roots.syncAndConnect()
+	const completion = () => {
+	    this.setState({
+		allRootsOptions: roots.fetchAllRootsOptions(),
+	    });
+	    console.log("all " + this.state.allRootsOptions.length);
+	};
+	roots.syncAndConnect(completion)
 	    .then((info) => {
 		this.setState({rootDatabaseConnected: true});
 		console.log("NOT indexing roots");
@@ -66,7 +78,7 @@ class App extends Component {
 	const ieLinksMore = this.state.ieLinksList;
 	const wordsContent = this.state.wordsContent;
 	const onClickWord = this.handleFetchRoots;
-	const onChangeLink = this.handleChangeLink;
+	
 	const showHideLabel = (div) => this.state.visible[div] ? "Hide" : "Show";
 	const limit = (<span><em>Limit:</em>
 		       <select value='3'>{
@@ -84,7 +96,8 @@ class App extends Component {
 		<a href='' onClick={this.showDiv("rootLinks")}>		
 		<strong>{showHideLabel("rootLinks")} PIE Root</strong></a>
 		&nbsp;&nbsp;{this.state.fetchInProgress}		
-		<LinksList wordsAndLinksList={ieLinksMore} onChange={onChangeLink}/>
+		<LinksList wordsAndLinksList={ieLinksMore}
+		onChange={this.handleChangeLink}/>
 		<div style={{display: (vis["rootLinks"] ? 'inline' : 'none')}}>
 		<Links wordsAndLinks={ieLinksOne} />
 		</div>
@@ -98,13 +111,16 @@ class App extends Component {
 	    	<IETranslations onSearchLine={
 		    (line) => () => { this.setState({ searchLine: line }) }
 		}/>
-		</div><hr/>		
-		<div>
+		</div>
+		<hr/>		
 		<a href='' onClick={this.showDiv("allRoots")}>
-		<strong>{showHideLabel("allRoots")} All Roots</strong></a></div>
+		<strong>{showHideLabel("allRoots")} All Roots</strong></a>
 		<div style={{display: (vis["allRoots"] ? 'inline' : 'none')}}>
-		<AllRoots todo="TODO"/>
-		</div><hr/>		
+		<AllRoots options={this.state.allRootsOptions}
+		allRootsLink={allRootsLink}
+		onChange={this.handleChangeAllRoots()}/>
+		</div>
+		<hr/>		
 		<a href='' onClick={this.showDiv("addWord")}>
 		<strong>{showHideLabel("addWord")} My Word(s)</strong></a>	
 		<div style={{display: (vis["addWord"] ? 'block' : 'none')}}>
@@ -146,6 +162,18 @@ class App extends Component {
 			   visibleRootLinks: true});
 	}
     }
+
+    handleChangeAllRoots() {
+	return async (event) => {
+	    const oneMap = new Map();
+	    const key = event.target.value;
+	    const content = await this.fetchRoot(key);
+	    const contentVal = content[0][1]; // map.get(key);
+	    oneMap.set(key, contentVal);
+	    this.setState({ieLinks: oneMap,
+			   visibleRootLinks: true});
+	}
+    }    
     
     handleFetchRoots(ieWords) {
 	return (event) => {
@@ -241,14 +269,6 @@ class App extends Component {
 }
 
 export default App;
-
-class AllRoots extends Component {
-    render() {
-	return (<span><em><strong>TODO/TBD... </strong>
-		Use <a href={allRootsLink} target="legacy">legacy app</a>
-		to browse all roots</em></span>);
-    }
-}
 
 class Spinner extends Component {
     render() {
