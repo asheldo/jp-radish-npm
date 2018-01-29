@@ -63,99 +63,68 @@ class App extends Component {
     }
 
     render() {
-	const ieLinks = this.state.ieLinks;
-	const ieLinksList = this.state.ieLinksList;
+	const ieLinksOne = this.state.ieLinks;
+	const ieLinksMore = this.state.ieLinksList;
 	const wordsContent = this.state.wordsContent;
 	const onClickWord = this.handleFetchRoots;
 	const onChangeLink = this.handleChangeLink;
-	const showHideLabel = (div) => this.state.visible[div] ? "Hide" : "Show"
-	// tbl tr
-	//  <table width="100%"><tbody><tr><td colSpan="2">
-	// tr1
-	// 		</td></tr><tr>
-	// td1
-	// 	<td style={{verticalAlign: 'top'}} width="50%">
-	
-	return (
-		<div className="App">		
+	const vis = this.state.visible;
+	const showHideLabel = (div) => {vis[div] ? "Hide" : "Show"};
+	const limit = (<span><em>Limit:</em>
+		       <select value='3'>{
+			   [1,2,3,4,5,6,7,8,9,10]
+			       .map((i) => (<option key={i} value={i}>{i}</option>))
+		       }</select></span>);
+	return (<div className="App">		
 		<ToastContainer autoClose={3000} />
-
 		<Header/>
-
 		
-		<div style={{verticalAlign: 'top', width: (this.state.visible["rootLinks"]
-				     ? '50%' : '20%'), display: 'inline-block'}}>
-
+		<div style={{verticalAlign: 'top',
+			     width: vis["rootLinks"] ? '50%' : '20%',
+			     display: 'inline-block'}}>
 		<a href='' onClick={this.showDiv("rootLinks")}>		
-		<h3>{showHideLabel("rootLinks")} PIE Root</h3></a>
+		<strong>{showHideLabel("rootLinks")} PIE Root</strong></a>
 		{this.state.fetchInProgress}		
-		<LinksList wordsAndLinksList={ieLinksList}
-	    onChange={onChangeLink}/>  <em>Limit:</em>
-		<select value='3'>{
-		    [1,2,3,4,5,6,7,8,9,10]
-			.map((i) => (<option key={i} value={i}>{i}</option>))
-		}</select>
-		
-		<div style={{display: (this.state.visible["rootLinks"]
-				       ? 'inline' : 'none')}}>
-		<Links wordsAndLinks={ieLinks} />
+		<LinksList wordsAndLinksList={ieLinksMore} onChange={onChangeLink}/>
+		<div style={{display: (vis["rootLinks"] ? 'inline' : 'none')}}>
+		<Links wordsAndLinks={ieLinksOne} />
 		</div>
 		</div>
 
-	    	<div style={{width: (this.state.visible["rootLinks"]
-				     ? '50%' : '80%'),  display: 'inline-block'}}>
-		
-		<div className="translations">
+	    	<div style={{width: (vis["rootLinks"] ? '50%' : '80%'),
+			     display: 'inline-block'}}>		
 		<a href='' onClick={this.showDiv("translations")}>
 		<strong>{showHideLabel("translations")} Translations</strong></a>
-		<div style={{display: (this.state.visible["translations"]
-					  ? 'inline' : 'none')}}>
-	    	<IETranslations onSearchLine={(line) => {
-		    return () => { this.setState({ searchLine: line }) }
-		}} />
-		</div><hr/></div>		
+		<div style={{display: (vis["translations"] ? 'inline' : 'none')}}>
+	    	<IETranslations onSearchLine={
+		    (line) => () => { this.setState({ searchLine: line }) }
+		}/>
+		</div><hr/>		
 		<div>
 		<a href='' onClick={this.showDiv("allRoots")}>
 		<strong>{showHideLabel("allRoots")} All Roots</strong></a></div>
-		<div style={{display: (this.state.visible["allRoots"]
-					  ? 'inline' : 'none')}}>
-		<em>...TBA...
-		Use <a href={allRootsLink} target="legacy">legacy app</a> to
-	    browse all roots</em>
+		<div style={{display: (vis["allRoots"] ? 'inline' : 'none')}}>
+		<AllRoots todo="TODO"/>
 		</div><hr/>
 		<div className="add-word-div">
 		<a href='' onClick={this.showDiv("addWord")}>
-		<strong>{showHideLabel("addWord")} My Word(s)</strong></a>		
-		<div style={{display: (this.state.visible["addWord"]
-					  ? 'block' : 'none')}}>
+		<strong>{showHideLabel("addWord")} My Word(s)</strong></a>	
+		<div style={{display: (vis["addWord"] ? 'block' : 'none')}}>
 	    	<LanguageWord
-	    onTest={(arg) => {
-		this.fetchPokornyRoots(arg);
-	    }}
+	    onTest={(arg) => { this.fetchPokornyRoots(arg) }}
 	    handleWordsContent={ wc => this.setState({wordsContent: wc}) }
 	    editWord={this.state.editWord}
 	    searchLine={this.state.searchLine}/>
-		<hr/>
-		
+		<hr/>		
 		<a href='' onClick={this.showDiv("wordsList")}>
 		<strong>Words List</strong></a>		
-		<div style={{display: (this.state.visible["wordsList"]
-					  ? 'block' : 'none')}}>
-		<WordsList words={wordsContent}
-	    onEditWord={
-		// todo => todo
-		(word) => (event) => this.setState({editWord: word})
-	    }
-	    onClickWord={onClickWord} />
+		<div style={{display: (vis["wordsList"] ? 'block' : 'none')}}>
+		<WordsList words={wordsContent} onEditWord={
+		    (word) => (event) => this.setState({editWord: word})
+		} onClickWord={onClickWord} />
 		</div>
-		
-		<hr/>
-		</div>
-		</div>    
-		
-		<hr/>
-		</div>
-		</div>
+		<hr/></div></div>    
+		<hr/></div></div>
 	);
     }
     
@@ -187,6 +156,8 @@ class App extends Component {
 	}
     }
 
+    // TODO Refactor two methods maybe to class, clarifying the setState targets
+    
     fetchPokornyRoots(ieWords) {
 	let ct = 0;
 	const showFetchSpinner = () => {
@@ -232,7 +203,6 @@ class App extends Component {
 	    const mapMore = new Map();
 	    rootSets.forEach((rootSet) => {
 		if (rootSet) {
-		    console.log(rootSet.length);
 		    rootSet.forEach((root) => {
 			if (root && root.length) {
 			    const rootId = root[0];
@@ -273,6 +243,14 @@ class App extends Component {
 }
 
 export default App;
+
+class AllRoots extends Component {
+    render() {
+	return (<span><em><strong>TODO/TBD... </strong>
+		Use <a href={allRootsLink} target="legacy">legacy app</a>
+		to browse all roots</em></span>);
+    }
+}
 
 class Spinner extends Component {
     render() {
