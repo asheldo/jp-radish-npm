@@ -20,8 +20,7 @@ import 'react-toastify/dist/ReactToastify.min.js';
 QueryChangeDetector.enable();
 QueryChangeDetector.enableDebugging();
 
-// Simple render components
-
+// export default
 class App extends Component {
 
     constructor(props) {
@@ -68,13 +67,13 @@ class App extends Component {
 	const wordsContent = this.state.wordsContent;
 	const onClickWord = this.handleFetchRoots;
 	const onChangeLink = this.handleChangeLink;
-	const vis = this.state.visible;
-	const showHideLabel = (div) => {vis[div] ? "Hide" : "Show"};
+	const showHideLabel = (div) => this.state.visible[div] ? "Hide" : "Show";
 	const limit = (<span><em>Limit:</em>
 		       <select value='3'>{
 			   [1,2,3,4,5,6,7,8,9,10]
 			       .map((i) => (<option key={i} value={i}>{i}</option>))
 		       }</select></span>);
+	const vis = this.state.visible;
 	return (<div className="App">		
 		<ToastContainer autoClose={3000} />
 		<Header/>
@@ -84,7 +83,7 @@ class App extends Component {
 			     display: 'inline-block'}}>
 		<a href='' onClick={this.showDiv("rootLinks")}>		
 		<strong>{showHideLabel("rootLinks")} PIE Root</strong></a>
-		{this.state.fetchInProgress}		
+		&nbsp;&nbsp;{this.state.fetchInProgress}		
 		<LinksList wordsAndLinksList={ieLinksMore} onChange={onChangeLink}/>
 		<div style={{display: (vis["rootLinks"] ? 'inline' : 'none')}}>
 		<Links wordsAndLinks={ieLinksOne} />
@@ -105,8 +104,7 @@ class App extends Component {
 		<strong>{showHideLabel("allRoots")} All Roots</strong></a></div>
 		<div style={{display: (vis["allRoots"] ? 'inline' : 'none')}}>
 		<AllRoots todo="TODO"/>
-		</div><hr/>
-		<div className="add-word-div">
+		</div><hr/>		
 		<a href='' onClick={this.showDiv("addWord")}>
 		<strong>{showHideLabel("addWord")} My Word(s)</strong></a>	
 		<div style={{display: (vis["addWord"] ? 'block' : 'none')}}>
@@ -117,13 +115,13 @@ class App extends Component {
 	    searchLine={this.state.searchLine}/>
 		<hr/>		
 		<a href='' onClick={this.showDiv("wordsList")}>
-		<strong>Words List</strong></a>		
+		<strong>{showHideLabel("wordsList")} Words List</strong></a>
 		<div style={{display: (vis["wordsList"] ? 'block' : 'none')}}>
 		<WordsList words={wordsContent} onEditWord={
 		    (word) => (event) => this.setState({editWord: word})
 		} onClickWord={onClickWord} />
 		</div>
-		<hr/></div></div>    
+		<hr/></div>    
 		<hr/></div></div>
 	);
     }

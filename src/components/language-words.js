@@ -141,7 +141,7 @@ export class LanguageWord extends Component {
 		// newLang = this.props.searchLine.ieLang + "";
 	    }
 	}
-	const inputProps = { placeholder: 'Type a language',
+	const inputProps = { placeholder: 'I-E lang (e.g lat)',
 			     value: value,
 			     onChange: this.handleChangeLang };
 	// Finally, render it!
@@ -154,11 +154,9 @@ export class LanguageWord extends Component {
 		/>
 	);
 	const onChangeWords = this.handleChangeWords;
-	// const wordsContent = this.state.words;
 	const onClickAdd = this.addWord;
 	const onClickTest = this.onTest;
-	return (
-		<table width="100%"><tbody><tr>
+	return (<table width="100%"><tbody><tr>
 		<td style={{verticalAlign:"top", textAlign:"right"}}>
 		{langIn}
 		</td>
@@ -166,7 +164,7 @@ export class LanguageWord extends Component {
 		<input type="text"
 	    value={newWords}
 	    onChange={onChangeWords}
-	    style={{width:'30em'}} placeholder="/root/=word" />
+	    style={{width:'30em'}} placeholder='root=word (e.g. "/ālu-, ālo-/=radix")' />
 		<br/>
 		<button onClick={onClickAdd}>Add word</button>
 		<button onClick={onClickTest}>&gt;&gt; Test</button>

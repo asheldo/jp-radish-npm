@@ -31,15 +31,15 @@ export class Header extends Component {
 	const textFirst
 	      = (<span>Page, like many before it,
 		 based on the legendary and very long
-		 <em>Indogermanisches Etymologisches Wörterbuch (IEW)</em>
-		 </span>)
+		 &nbsp;<em>Indogermanisches Etymologisches
+		 Wörterbuch (IEW)</em></span>)
 	const textRest
 	      = (<span>(Julius Pokorny. Francke, 1959).
 		 Running on the shoulders of Indo-European linguistic giants;
 		 text scan and English meanings by George Starostin,
 		 further corrections by A. Lubotsky, et al.<br/>
 		 <a href='https://en.wiktionary.org/wiki/radish'><em>Radish</em>
-		 etymology</a> (i.e. Latin accus. sing. of <em>radix</em></span>);
+		 &nbsp;etymology</a> (i.e. Latin accus. sing. of <em>radix</em></span>);
 	const text = (<span>{textFirst} {textRest}</span>);
 	const onClick = (event) => {
 	    event.preventDefault();
