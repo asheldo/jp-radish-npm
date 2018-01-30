@@ -5,7 +5,11 @@ import './App.css';
 const iew1 = "https://www.win.tue.nl/~aeb/natlang/ie/pokorny.html";
 const iew2 = "https://www.win.tue.nl/~aeb/"
 const iew3 = "https://indo-european.info/pokorny-etymological-dictionary/whnjs.htm"
-export const allRootsLink = "https://192.168.0.6:3001";
+
+const domain = process.env.REACT_APP_COUCHDB_DOMAIN;
+const port = process.env.REACT_APP_POKORNY_PORT;
+
+export const allRootsLink = `http://${domain}:${port}`;
 
 const links = () => {
     let i = 0;
