@@ -9,7 +9,7 @@ const iew3 = "https://indo-european.info/pokorny-etymological-dictionary/whnjs.h
 const domain = process.env.REACT_APP_COUCHDB_DOMAIN;
 const port = process.env.REACT_APP_POKORNY_PORT;
 
-export const allRootsLink = `http://${domain}:${port}`;
+export const allRootsLink = `http://${domain}:3000`;
 
 const links = () => {
     let i = 0;
