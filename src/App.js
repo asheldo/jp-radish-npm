@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { createJunctionTemplate, createPageTemplate } from 'junctions'
 
 import './App.css';
 import { Header, allRootsLink } from './page-elements';
@@ -16,7 +17,7 @@ import {QueryChangeDetector} from 'rxdb';
 
 import { ToastContainer, style } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.min.js';
-
+// toast notif. style:
 style({
     width: "120px",
 });
@@ -24,7 +25,7 @@ style({
 QueryChangeDetector.enable();
 QueryChangeDetector.enableDebugging();
 
-// export default
+// export default below
 class App extends Component {
 
     constructor(props) {
@@ -268,7 +269,34 @@ class App extends Component {
 
 }
 
-export default App;
+// export default App;
+
+// App and Junctions Template
+const AppJunctionTemplate = createJunctionTemplate({
+  children: {
+    '/': createPageTemplate({
+      title: 'Junctions',
+      component: () =>
+        <div>
+          <h1>Junctions</h1>
+        </div>
+    }),
+
+    '/api-reference': createPageTemplate({
+      title: 'Junctions API Reference',
+      component: () =>
+        <div>
+          <h1>Junctions API Reference</h1>
+        </div>
+    }),
+  },
+
+  component: App,
+})
+
+export default AppJunctionTemplate;
+
+//
 
 class Spinner extends Component {
     render() {

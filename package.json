@@ -5,6 +5,7 @@
 			"dependencies": {
 						"babel-polyfill": "^6.26.0",
 						"concurrently": "^3.5.1",
+						"junctions": "^0.4.4",
 						"moment": "^2.19.3",
 						"pouchdb-adapter-http": "6.2.0",
 						"pouchdb-adapter-idb": "6.2.0",
@@ -14,6 +15,7 @@
 						"react": "^16.2.0",
 						"react-autosuggest": "^9.3.2",
 						"react-dom": "^16.2.0",
+						"react-junctions": "^0.4.4",
 						"react-scripts": "1.0.17",
 						"react-toastify": "^3.0.0",
 						"rxdb": "^7.2.0",
