@@ -5,6 +5,7 @@ import { Header } from './page-elements';
 import { Navbar } from './page-navbar'
 
 // for pokorny roots db
+import { Account } from './components/account';
 import { Pokorny } from './components/pokorny';
 
 import {QueryChangeDetector} from 'rxdb';
@@ -23,66 +24,51 @@ QueryChangeDetector.enableDebugging();
 // export default below
 class App extends React.Component {
     
-  renderContent() {
-    let { junction } = this.props
-
-    // If there is a currently selected page, get its component.
-    // Use an uppercase `C` so the variable can be used in a JSX element.
-    let Component =
-      this.props.junction.activeChild && 
-      this.props.junction.activeChild.component
-    
-    if (!Component) {
-      // If the user enters an unknown URL, there will be no active child,
-      // and thus no component.
-      return <h1>404: Page Not Found</h1>
+    renderContent() {
+	let { junction } = this.props
+	// If there is a currently selected page, get its component.
+	// Use an uppercase `C` so the variable can be used in a JSX element.
+	let Component = junction.activeChild &&
+	    junction.activeChild.component 
+	// If user enters unknown URL, there is no active child, thus no component
+	if (!Component) {
+	    return <h1>404: Page Not Found</h1>
+	}
+	else {
+	    // Render page's component, passing in active Page object as prop.
+	    return <Component page={ junction.activeChild } />
+	}
     }
-    else {
-      // Render the page's component, passing in the active Page object
-      // as a prop.
-      return <Component page={this.props.junction.activeChild} />
-    }
-  }
 
-  render() {
-    return (
-      <div className='App'>
-	    <ToastContainer autoClose={3000} />
-	    <Header />
-	    <Navbar />	
-        {this.renderContent()}
-      </div>
-    )
-  }
+    render() {
+	return (<div className='App'>
+		<ToastContainer autoClose={3000} />
+		<Header />
+		<Navbar /> { this.renderContent() } </div>)
+    }
 }
 
-
-
-// export default App;
-
 const AppJunctionTemplate = createJunctionTemplate({
-  children: {
-    '/': createPageTemplate({
-      title: 'PokornyX',
-      component: () =>
-	    <Pokorny/>
-    }),
-
-    '/api-reference': createPageTemplate({
-      title: 'PokornyX Reference',
-      component: () =>
-        <div>
-            <h1>JPokornyX Reference</h1>
-	    <ol>
-	    <li>Add lines from classic works (titles) in Indo-European languages</li>
-	    <li>Add translation/references, often to eng (Modern English)</li>
-	    <li>Test Pokorny root=word (e.g. in original IE or related lang.)</li>
-	    </ol>
-        </div>
-    }),
-  },
-
-  component: App,
+    children: {
+	'/login': createPageTemplate({
+	    title: 'Login',
+	    component: () => <Account/>
+	}),
+	'/': createPageTemplate({
+	    title: 'PokornyX Translation',
+	    component: () => <Pokorny/>
+	}),
+	'/api-reference': createPageTemplate({
+	    title: 'PokornyX Reference',
+	    component: () =>
+		<div>
+		<h1>JPokornyX Reference</h1>
+		<ol><li>Translate lines from classic works/titles in Indo-Euro languages</li>
+		<li>Search (test) Pokorny-root=word (e.g. in original or related IE lang)</li>
+		</ol></div>
+	}),
+    },
+    component: App,
 })
 
 export default AppJunctionTemplate;

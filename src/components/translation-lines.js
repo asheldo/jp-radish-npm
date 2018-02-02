@@ -1,12 +1,12 @@
 import React, { Component } from 'react';
 import Autosuggest from 'react-autosuggest';
 
-import { pokornyTranslationSchema } from '../schema';
+import { translationsDBName, translationsCollections } from '../schema';
 import { languagesValAndName } from '../pokorny-language';
 import { DBSubscription } from '../db/rxdb-utils';
 
 // v. indogermanishes etymologisches worterbuch pokorny17112501
-const translationsDBName = 'ietranslations17122704';
+
 // indogermDbName = 'pokorny17112501';
 // piememoroots17102401 piekeys17102401
 
@@ -36,12 +36,8 @@ export class IETranslations extends Component {
     }
     
     async componentDidMount() {
-	const collections = [{name: 'translations',
-			      schema: pokornyTranslationSchema}];
 	this.translationsDB = await this.translationsDBSub
-	    .createDatabase(translationsDBName,
-			    collections,
-			    '♔ ');
+	    .createDatabase(translationsDBName, translationsCollections, '♔ ');
     }
     
     componentWillUnmount() {

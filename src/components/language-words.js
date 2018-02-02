@@ -1,12 +1,11 @@
 import React, { Component } from 'react';
 import Autosuggest from 'react-autosuggest';
 
-import { pokornyWordsSchema } from '../schema';
+import { wordsDBName, wordsCollections } from '../schema';
 import { languagesValAndName } from '../pokorny-language';
 import { DBSubscription } from '../db/rxdb-utils';
 
 // v. indogermanishes etymologisches worterbuch pokorny17112501
-const wordsDBName = 'pokornyx17121101';
 
 const languages = languagesValAndName();
 
@@ -42,9 +41,7 @@ export class LanguageWord extends Component {
 
     async componentDidMount() {
 	this.wordsDB = await this.wordsDBSub
-	    .createDatabase(wordsDBName,
-			    [{name: 'words', schema: pokornyWordsSchema}],
-			    '♛ ');
+	    .createDatabase(wordsDBName, wordsCollections,'♛ ');
     }
     
     componentWillUnmount() {

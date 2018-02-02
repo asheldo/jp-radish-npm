@@ -5,9 +5,9 @@ import {syncURL} from './db/rxdb-utils';
 var PouchDB = require('pouchdb-browser');
 // PouchDB.plugin(require('pouchdb-adapter-idb'));
 
-const nameDatabase = 'pokorny17112501',
-      nameKeywordsDb = 'piekeys17102401',
-      nameMemoRootsDb = 'piememoroots17102401';
+const nameDatabase = 'pokorny17112501';
+const nameKeywordsDb = 'piekeys17102401';
+const nameMemoRootsDb = 'piememoroots17102401';
 
 // const syncURL = 'localhost';
 // const host = "192.168.0.6";

@@ -1,4 +1,8 @@
-export const pokornyWordsSchema = {
+// schema.js
+
+// simple one:
+export const wordsDBName = 'pokornyx17121101';
+const pokornyWordsSchema = {
     title: 'hoard words schema',
     description: 'Database schema for a word-hoard',
     version: 0,
@@ -18,7 +22,11 @@ export const pokornyWordsSchema = {
     required: ['ieLang','ieWords']
 }
 
-export const pokornyTranslationSchema = {
+export const wordsCollections = [{name: 'words', schema: pokornyWordsSchema}];
+
+// Much bigger schema:
+export const translationsDBName = 'ietranslations17122704';
+const pokornyTranslationsSchema = {
     title: 'ancient literature schema',
     description: 'collection schema for ancient literature line-based word-hoard',
     version: 0,
@@ -117,3 +125,6 @@ export const pokornyTranslationSchema = {
     required: ['timestamp','ieLang','ieWords',
 	       'lineLocator','lineTranslations','wordEtymonLemmas']
 }
+
+export const translationsCollections = [{name: 'translations',
+					schema: pokornyTranslationsSchema}];
