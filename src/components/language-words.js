@@ -1,9 +1,10 @@
 import React, { Component } from 'react';
 import Autosuggest from 'react-autosuggest';
 
-import { wordsDBName, wordsCollections } from '../schema';
-import { languagesValAndName } from '../pokorny-language';
-import { DBSubscription } from '../db/rxdb-utils';
+import { databases, DBSubscription } from '../db/rxdb-utils'
+import { wordsDBName, wordsCollections } from '../db/schema'
+import { languagesValAndName } from '../pokorny-language'
+import history from '../history.js'
 
 // v. indogermanishes etymologisches worterbuch pokorny17112501
 
@@ -21,7 +22,9 @@ export class LanguageWord extends Component {
 	// and they are initially empty because the Autosuggest is closed.
 	let newWords = '';
 	let newLang = '';
-	this.state = {	    
+	this.state = {
+	    username: '',
+	    wordsDB: null,
 	    value: newLang,
 	    suggestions: [],
 	    newWords: newWords,
@@ -37,14 +40,50 @@ export class LanguageWord extends Component {
 	this.handleChangeLang = this.handleChangeLang.bind(this);
 	this.handleChangeWords = this.handleChangeWords.bind(this);
 	this.onTest = this.onTest.bind(this);
+	this.mountDB = this.mountDB.bind(this);
+	this.unboundDB = this.unmountDB.bind(this);
     }
 
+    getSessionUser() {
+	const u = sessionStorage.getItem('username') // set by account login
+	return u && u !== undefined ? u : ''
+    }
+    
     async componentDidMount() {
-	this.wordsDB = await this.wordsDBSub
-	    .createDatabase(wordsDBName, wordsCollections,'♛ ');
+	this.mountDB(this.getSessionUser());		
+        this.setState({
+	    removeListener:
+	    history.listen(async (location) => {
+		const username = this.getSessionUser()
+		if (this.state.username !== username) {
+		    await this.unmountDB()
+		    await this.mountDB(username)
+		}		
+	    })
+	})
+    }
+
+    // TODO "RxDB" bug? or missing feature more likely...
+    // Maybe does not support reconnect (i.e. re-createDatabase)
+    // during session, so save in case try to re-connect
+    async mountDB(username) {
+	const name = wordsDBName + username
+	var db = databases[name]
+	// TODO Probably need to unsubscribe from previous DB's subs
+	if (!db) {
+	    db = await this.wordsDBSub
+		.createDatabase(wordsDBName + username, wordsCollections, '♛ ')
+	    databases[name] = db
+	}
+	this.setState({wordsDB: db, username: username})
     }
     
     componentWillUnmount() {
+	this.state.removeListener()
+	this.unmountDB()
+    }
+
+    unmountDB() {
 	// Unsubscribe from all subscriptions
 	this.wordsDBSub.unsubscribe();
     }
@@ -85,7 +124,7 @@ export class LanguageWord extends Component {
 	    ieLang: this.state.newLang,
 	    ieWords: this.state.newWords
 	};
-	const wordsCollection = this.wordsDB.words;
+	const wordsCollection = this.state.wordsDB.words;
 	await wordsCollection.insert(newWord);	
 	this.setState({newLang: '', newWords: ''});
     }

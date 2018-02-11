@@ -1,12 +1,12 @@
-import React, { Component } from 'react';
+import React, { Component } from 'react'
 
-import '../App.css';
-import { allRootsLink } from '../page-elements';
+import '../App.css'
+import { allRootsLink } from '../page-elements'
 
-import { translationsDBName, translationsCollections } from '../schema';
-import { wordsDBName, wordsCollections } from '../schema';
-// import * as roots from '../pokorny-roots';
-import { DBSubscription } from '../db/rxdb-utils';
+import { databases, DBSubscription } from '../db/rxdb-utils'
+import { translationsDBName, translationsCollections,
+	 wordsDBName, wordsCollections } from '../db/schema'
+import history from '../history'
 
 export class Account extends Component {
 
@@ -18,66 +18,60 @@ export class Account extends Component {
     }
     
     async componentDidMount() {
-	// indogermDatabase
 	const completion = () => {
 	    this.setState({
 		db: [] // roots.
 	    });
 	    console.log("db " + this.state.db);
 	};
-/*	roots.userDBsFromTemplate(completion)
-	    .then((info) => {
-		this.setState({rootDatabaseConnected: true});
-		console.log("roots");
-	    })
-	    .catch((err) => console.log(err));
-*/
     }
 
     componentWillUnmount() {
     }
 
     render() {
-	const createAccount = async () => {
-	    // A: simple create locally and connect?
-	    // New Recipe B. (versus createDatabase)
-
-	    // callback to sessionStorage
-	    const storeUserName = () => {
-		sessionStorage.setItem('username', this.state.username)
-	    }
-	    
-	    // result of 2nd db
-	    const translationsSubscribed = async (docs) => {
-		this.setState({translations: docs});
-		storeUserName();
-		this.setState({login:true});
-	    }
-	    const transDB = new DBSubscription(translationsSubscribed);
-	    const newTransDB =  () => {
-		 transDB.newDbFromTemplate(
-		    this.state.username,
-		    translationsDBName,
-		    translationsCollections, () => {}, "w ");
-	    }
-	    
-	    // result of 1st db
-	    const wordsSubscribed =  (docs) => {
-		this.setState({words: docs});
-		 newTransDB();
-	    }
-	    const wordsDB = new DBSubscription(wordsSubscribed);
-	    await wordsDB.newDbFromTemplate(
-		this.state.username,
-		wordsDBName,
-		wordsCollections, () => {}, "t ");
+	// A: simple create locally and connect?
+	// New Recipe B. (versus createDatabase)
+	// const history = this.props.junction.?.navigation.history
+	const translationsSubscribed = (docs) => {
+	    this.setState({translations: docs,
+			   dbUser: this.state.username});
+	    sessionStorage.setItem('username', this.state.username)
+	    console.dir(sessionStorage.getItem('username'))
+	    // Now back to main
+	    history.push('/')
 	}
-	return (<div>
-		<input value={this.state.username}
+	const wordsSubscribed = async (docs) => {
+	    this.setState({words: docs});
+            const name = translationsDBName + this.state.username;
+	    if (databases[name]) {
+		console.dir(name)
+	    } else {
+		const db = await new DBSubscription(translationsSubscribed)
+		      .newDbFromTemplate(this.state.username,
+					 translationsDBName,
+					 translationsCollections,
+					 () => {}, "w ")
+		databases[name] = db
+	    }
+	}
+	const createAccount = async () => {
+            const name = wordsDBName + this.state.username;
+	    if (databases[name]) {
+		console.dir(name)
+	    } else {
+		const db = await new DBSubscription(wordsSubscribed)
+		    .newDbFromTemplate(this.state.username,
+				       wordsDBName,
+				       wordsCollections,
+				       () => {}, "t ")
+		databases[name] = db
+	    }
+	}
+	return (<div><input value={this.state.username}
 		onChange={ event =>
-			   this.setState({username:event.target.value})}/>
+			   this.setState({username: event.target.value})}/>
 		<button onClick={createAccount}>login</button>
 		</div>)
     }
-
 }

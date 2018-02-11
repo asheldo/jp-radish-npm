@@ -40,7 +40,7 @@ export class Pokorny extends Component {
 	this.showDiv = this.showDiv.bind(this);
     }
     
-    async componentDidMount() {
+    componentDidMount() {
 	// indogermDatabase
 	const completion = () => {
 	    this.setState({

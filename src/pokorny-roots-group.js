@@ -122,6 +122,7 @@ function fillRootGroupsSelect(groups) {
     }
 
 function fillAllRootsSelect(map) {
+    allRoots.length = 0;
     var last = "";
     for (var [pageStart, id] of map.entries()) {
 	let name = id.length <= 24 ? id : id.substring(0, 24);

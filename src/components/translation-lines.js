@@ -1,9 +1,10 @@
-import React, { Component } from 'react';
-import Autosuggest from 'react-autosuggest';
+import React, { Component } from 'react'
+import Autosuggest from 'react-autosuggest'
 
-import { translationsDBName, translationsCollections } from '../schema';
-import { languagesValAndName } from '../pokorny-language';
-import { DBSubscription } from '../db/rxdb-utils';
+import { databases, DBSubscription } from '../db/rxdb-utils'
+import { translationsDBName, translationsCollections } from '../db/schema'
+import { languagesValAndName } from '../pokorny-language'
+import history from '../history.js'
 
 // v. indogermanishes etymologisches worterbuch pokorny17112501
 
@@ -21,7 +22,7 @@ export class IETranslations extends Component {
 	// and an onChange handler that updates this value (see below).
 	// Suggestions also need to be provided to the Autosuggest,
 	// and they are initially empty because the Autosuggest is closed.
-	this.state = this.emptyState();
+	this.state = this.startingState();
 	const docsSubscribed = lines => this.setState({lines: lines});
 	this.translationsDBSub = new DBSubscription(docsSubscribed);
 	this.upsertTranslation = this.upsertTranslation.bind(this);
@@ -30,17 +31,55 @@ export class IETranslations extends Component {
 	this.handleChangeIEWork = this.handleChangeIEWork.bind(this);
 	this.handleChangeLineLocator = this.handleChangeLineLocator.bind(this);
 	this.onEditLine = this.onEditLine.bind(this);
+	this.mountDB = this.mountDB.bind(this);
+	this.unboundDB = this.unmountDB.bind(this);
     }
 
     componentWillReceiveProps(newProps) {
     }
+
+    getSessionUser() {
+	const u = sessionStorage.getItem('username') // set by account login
+	return u && u !== undefined ? u : ''
+    }
     
     async componentDidMount() {
-	this.translationsDB = await this.translationsDBSub
-	    .createDatabase(translationsDBName, translationsCollections, '♔ ');
+	this.mountDB(this.getSessionUser());
+        this.setState({
+	    removeListener:
+            history.listen(async (location) => {
+		const username = this.getSessionUser()
+		if (this.state.username !== username) {
+
+		    await this.unmountDB()
+		    await this.mountDB(username)
+		}
+	    })
+	})
+    }
+
+    // TODO "RxDB" bug? or missing feature more likely...
+    // Maybe does not support reconnect (i.e. re-createDatabase)
+    // during session, so save in case try to re-connect
+    async mountDB(username) {
+	const name = translationsDBName + username
+	var db = databases[name]
+	// TODO Probably need to unsubscribe from previous DB's subs
+	if (!db) {
+	    db = await this.translationsDBSub
+		.createDatabase(translationsDBName + username,
+				translationsCollections, '♔ ')
+	    databases[name] = db
+	}
+	this.setState({translationsDB: db, username: username})
     }
     
     componentWillUnmount() {
+	this.state.removeListener()
+	this.unmountDB()
+    }
+
+    unmountDB() {
 	// Unsubscribe from all subscriptions
 	this.translationsDBSub.unsubscribe();
     }
@@ -61,7 +100,15 @@ export class IETranslations extends Component {
 	}
     }
     
-    emptyState() {
+    startingState() {
+	const empty = this.emptyWorkState()
+	empty.username = ''
+	empty.translationsDB = null
+	console.dir(empty)
+	return empty
+    }
+    
+    emptyWorkState() {
 	return {
 	    timestamp: '',
 	    value: '',
@@ -174,7 +221,7 @@ export class IETranslations extends Component {
 	    lineTranslations: this.state.lineTranslations,
 	    wordEtymonLemmas: []
 	};	
-	const collection = this.translationsDB.translations;
+	const collection = this.state.translationsDB.translations;
 	var doc = null;
 	const docs = await collection.find().where('id').equals(id).exec();
 	docs.forEach((rowDoc) => {
@@ -241,7 +288,7 @@ export class IETranslations extends Component {
 	const onChangeLocator = this.handleChangeLineLocator;
 	const wordsContent = this.state.ieWords;
 	const onClickAdd = this.upsertTranslation;
-	const onClickClear = () => this.setState(this.emptyState());
+	const onClickClear = () => this.setState(this.emptyWorkState());
 	const onClickNewLine = () => {
 	    const empty = [{ timestamp:  Date.now().toString() }];
 	    this.setState({

@@ -9,7 +9,9 @@ const iew3 = "https://indo-european.info/pokorny-etymological-dictionary/whnjs.h
 const domain = process.env.REACT_APP_COUCHDB_DOMAIN;
 const port = process.env.REACT_APP_POKORNY_PORT;
 
-export const allRootsLink = `http://${domain}:3000`;
+// Legacy app/page (todo add to a junction here)
+const protocol = window.location.href.split("/")[0]
+export const allRootsLink = `${protocol}//${domain}:3000`;
 
 const links = () => {
     let i = 0;
