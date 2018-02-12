@@ -12,7 +12,7 @@ var PouchDB = require('pouchdb-browser');
 const domain = process.env.REACT_APP_COUCHDB_DOMAIN;
 const port = process.env.REACT_APP_COUCHDB_PORT;
 const protocol = window.location.href.split("/")[0]
-export const syncURL = `${protocol}//${domain}:${port}/`;
+export const syncURL = `${protocol}//${domain}${port}`;
 
 export const databases = {}
 
